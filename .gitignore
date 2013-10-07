@@ -1,0 +1,6 @@
+*.iml
+out
+gen
+*.iws
+workspace.xml
+tasks.xml
