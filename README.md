@@ -13,7 +13,7 @@ java -jar PropositionalCalculus.jar -m pc -i tests_pc/1.in -o tests_pc/1.out
 
 ## Deduction expand
 
-Parametrs: 
+Optional parametrs: 
 * -n <number> (expand <number> last assumptions)
 * -na (expand all assumptions)
 
