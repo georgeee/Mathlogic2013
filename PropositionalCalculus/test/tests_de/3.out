@@ -1,0 +1,13 @@
+ |- ((A&B)->(B&A))
+((A&B)->A) //Axiom scheme #4
+((A&B)->B) //Axiom scheme #5
+(B->(A->(B&A))) //Axiom scheme #3
+((B->(A->(B&A)))->((A&B)->(B->(A->(B&A))))) //Axiom scheme #1
+((A&B)->(B->(A->(B&A)))) //MP #3, #4
+(((A&B)->B)->(((A&B)->(B->(A->(B&A))))->((A&B)->(A->(B&A))))) //Axiom scheme #2
+(((A&B)->(B->(A->(B&A))))->((A&B)->(A->(B&A)))) //MP #2, #6
+((A&B)->(A->(B&A))) //MP #5, #7
+(((A&B)->A)->(((A&B)->(A->(B&A)))->((A&B)->(B&A)))) //Axiom scheme #2
+(((A&B)->(A->(B&A)))->((A&B)->(B&A))) //MP #1, #9
+((A&B)->(B&A)) //MP #8, #10
+

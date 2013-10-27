@@ -5,3 +5,5 @@ gen
 workspace.xml
 *.un~
 tasks.xml
+.*.swp
+.swp

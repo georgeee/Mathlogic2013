@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="PropositionalCalculus:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/PropositionalCalculus_jar</output-path>
+    <root id="archive" name="PropositionalCalculus.jar">
+      <element id="module-output" name="PropositionalCalculus" />
+      <element id="extracted-dir" path="$APPLICATION_HOME_DIR$/lib/junit-4.10.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

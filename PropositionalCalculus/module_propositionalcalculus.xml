@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="module_propositionalcalculus" default="compile.module.propositionalcalculus">
+  <dirname property="module.propositionalcalculus.basedir" file="${ant.file.module_propositionalcalculus}"/>
+  
+  <property name="module.jdk.home.propositionalcalculus" value="${project.jdk.home}"/>
+  <property name="module.jdk.bin.propositionalcalculus" value="${project.jdk.bin}"/>
+  <property name="module.jdk.classpath.propositionalcalculus" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.propositionalcalculus" value="${compiler.args}"/>
+  
+  <property name="propositionalcalculus.output.dir" value="${module.propositionalcalculus.basedir}/out/production/propositionalcalculus"/>
+  <property name="propositionalcalculus.testoutput.dir" value="${module.propositionalcalculus.basedir}/out/test/propositionalcalculus"/>
+  
+  <path id="propositionalcalculus.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="propositionalcalculus.module.production.classpath">
+    <path refid="${module.jdk.classpath.propositionalcalculus}"/>
+    <pathelement location="${idea.home}/lib/junit-4.10.jar"/>
+  </path>
+  
+  <path id="propositionalcalculus.runtime.production.module.classpath">
+    <pathelement location="${propositionalcalculus.output.dir}"/>
+    <pathelement location="${idea.home}/lib/junit-4.10.jar"/>
+  </path>
+  
+  <path id="propositionalcalculus.module.classpath">
+    <path refid="${module.jdk.classpath.propositionalcalculus}"/>
+    <pathelement location="${propositionalcalculus.output.dir}"/>
+    <pathelement location="${idea.home}/lib/junit-4.10.jar"/>
+  </path>
+  
+  <path id="propositionalcalculus.runtime.module.classpath">
+    <pathelement location="${propositionalcalculus.testoutput.dir}"/>
+    <pathelement location="${propositionalcalculus.output.dir}"/>
+    <pathelement location="${idea.home}/lib/junit-4.10.jar"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.propositionalcalculus">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.propositionalcalculus">
+    <patternset refid="excluded.from.module.propositionalcalculus"/>
+  </patternset>
+  
+  <path id="propositionalcalculus.module.sourcepath">
+    <dirset dir="${module.propositionalcalculus.basedir}">
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.propositionalcalculus" depends="compile.module.propositionalcalculus.production,compile.module.propositionalcalculus.tests" description="Compile module propositionalcalculus"/>
+  
+  <target name="compile.module.propositionalcalculus.production" depends="register.custom.compilers" description="Compile module propositionalcalculus; production classes">
+    <mkdir dir="${propositionalcalculus.output.dir}"/>
+    <javac2 destdir="${propositionalcalculus.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.propositionalcalculus}/javac">
+      <compilerarg line="${compiler.args.propositionalcalculus}"/>
+      <bootclasspath refid="propositionalcalculus.module.bootclasspath"/>
+      <classpath refid="propositionalcalculus.module.production.classpath"/>
+      <src refid="propositionalcalculus.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.propositionalcalculus"/>
+    </javac2>
+    
+    <copy todir="${propositionalcalculus.output.dir}">
+      <fileset dir="${module.propositionalcalculus.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.propositionalcalculus.tests" depends="register.custom.compilers,compile.module.propositionalcalculus.production" description="compile module propositionalcalculus; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.propositionalcalculus" description="cleanup module">
+    <delete dir="${propositionalcalculus.output.dir}"/>
+    <delete dir="${propositionalcalculus.testoutput.dir}"/>
+  </target>
+</project>
