@@ -1,10 +1,9 @@
 package ru.georgeee.mathlogic.propositionalcalculus.expression.operator;
 
+import ru.georgeee.mathlogic.propositionalcalculus.Main;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.Expression;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.StringConstants;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.UnaryOperator;
-
-import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -19,12 +18,23 @@ public class Not extends UnaryOperator {
     }
 
     @Override
+    public Expression negateImpl() {
+        return operand;
+    }
+
+    @Override
     protected String getOperationStringRepresentation() {
-        return StringConstants.NOT_OPERATION;
+        return Main.ALT_PRINT_MODE ? StringConstants.NOT_OPERATION_ALT : StringConstants.NOT_OPERATION;
     }
 
     @Override
     protected boolean evaluateImpl(boolean value) {
         return !value;
+    }
+
+
+    @Override
+    protected Expression createNewInstance(Expression operand) {
+        return new Not(operand);
     }
 }

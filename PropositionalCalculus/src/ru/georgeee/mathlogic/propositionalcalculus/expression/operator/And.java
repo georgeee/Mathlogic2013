@@ -1,5 +1,6 @@
 package ru.georgeee.mathlogic.propositionalcalculus.expression.operator;
 
+import ru.georgeee.mathlogic.propositionalcalculus.Main;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.BinaryOperator;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.Expression;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.StringConstants;
@@ -18,11 +19,16 @@ public class And extends BinaryOperator {
 
     @Override
     protected String getOperationStringRepresentation() {
-        return StringConstants.AND_OPERATION;
+        return Main.ALT_PRINT_MODE ? ' ' + StringConstants.AND_OPERATION_ALT + ' ' : StringConstants.AND_OPERATION;
     }
 
     @Override
     protected boolean evaluateImpl(boolean left, boolean right) {
         return left & right;
+    }
+
+    @Override
+    protected Expression createNewInstance(Expression leftOperand, Expression rightOperand) {
+        return new And(leftOperand, rightOperand);
     }
 }

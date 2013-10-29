@@ -2,15 +2,12 @@ package ru.georgeee.mathlogic.propositionalcalculus;
 
 import ru.georgeee.mathlogic.propositionalcalculus.exception.CalcException;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.Expression;
-import ru.georgeee.mathlogic.propositionalcalculus.expression.operator.Implication;
-import ru.georgeee.mathlogic.propositionalcalculus.parser.token.Token;
 import ru.georgeee.mathlogic.propositionalcalculus.parser.token.TokenHolder;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.Map;
 
 /**
@@ -21,11 +18,14 @@ import java.util.Map;
  * To change this template use File | Settings | File Templates.
  */
 public class Main {
+    public static boolean ALT_PRINT_MODE = false;
+
     static final int MODE_PROOF_CHECKER = 0;
     static final int MODE_DEDUCTION_EXPANDER = 1;
     static final int MODE_PROOF_FINDER = 2;
     PrintWriter out;
     BufferedReader in;
+
 
     public Main(BufferedReader in, PrintWriter out) {
         this.in = in;
@@ -33,6 +33,8 @@ public class Main {
     }
 
     public static void main(String[] args) throws IOException {
+        boolean printComments = true;
+        boolean reduceUnnecessaryLines = true;
         int mode = MODE_PROOF_FINDER;
         String inputFileName = "input.txt";
         String outputFileName = "output.txt";
@@ -43,6 +45,8 @@ public class Main {
                 inputFileName = args[++i];
             } else if (arg.equals("-o")) {
                 outputFileName = args[++i];
+            } else if (arg.equals("-math") || arg.equals("alt")) {
+                ALT_PRINT_MODE = true;
             } else if (arg.equals("-m")) {
                 String _mode = args[++i].toLowerCase();
                 if (_mode.equals("pc") || _mode.equals("c")) mode = MODE_PROOF_CHECKER;
@@ -55,6 +59,10 @@ public class Main {
             } else if (arg.equals("-n")) {
                 Integer _cnt = Integer.parseInt(args[++i]);
                 cnt = _cnt;
+            } else if (arg.equals("-npc")) {
+                printComments = false;
+            } else if (arg.equals("-nr")) {
+                reduceUnnecessaryLines = false;
             } else if (arg.equals("-na")) cnt = -1;
         }
         PrintWriter out = new PrintWriter(outputFileName);
@@ -65,7 +73,7 @@ public class Main {
                 mainInstance.checkProof();
                 break;
             case MODE_DEDUCTION_EXPANDER:
-                mainInstance.expandDeduction(cnt);
+                mainInstance.expandDeduction(cnt, printComments, reduceUnnecessaryLines);
                 break;
             case MODE_PROOF_FINDER:
                 mainInstance.findProof();
@@ -80,7 +88,7 @@ public class Main {
         FormulaBruteforceChecker bruteforceChecker = new FormulaBruteforceChecker();
         Expression formula;
         try {
-            formula = new ExpressionCompiler(formulaSrc).compile();
+            formula = new TokenHolder().getExpressionCompiler().compile(formulaSrc);
             if (formula == null) throw new CalcException();
         } catch (CalcException ex) {
             out.println("Error occured while parsing formula!");
@@ -94,7 +102,7 @@ public class Main {
     }
 
     public void checkProof() throws IOException {
-        Proof proof = new Proof(StandardAxiomSchemeList.getInstance());
+        Proof proof = new Proof();
         String line;
         int lineId = 1;
         boolean hasError = false;
@@ -119,20 +127,19 @@ public class Main {
         }
     }
 
-    protected String removeComments(String line){
-        String [] parts = line.split("//");
+    public static String removeComments(String line) {
+        String[] parts = line.split("//");
         return parts[0];
     }
 
-    public void expandDeduction(int cnt) throws IOException {
+    public void expandDeduction(int cnt, boolean printComments, boolean reduceUnnecessaryLines) throws IOException {
         String line = removeComments(in.readLine());
         String[] parts = line.split("\\|-");
-        Proof proof = new Proof(StandardAxiomSchemeList.getInstance());
-        proof.setTargetExpression(new ExpressionCompiler(parts[1]).compile());
+        Proof proof = new Proof();
+        proof.setTargetExpression(proof.getTokenHolder().getExpressionCompiler().compile(parts[1]));
         String firstLineLeftPart = parts[0].trim();
         if (!firstLineLeftPart.isEmpty()) {
             String[] _assumptions = parts[0].split(",");
-            TokenHolder th = new TokenHolder();
             for (String _assumption : _assumptions) {
                 proof.addAssumption(_assumption);
             }
@@ -151,14 +158,14 @@ public class Main {
             }
             ++lineId;
         }
-        if(cnt < 0) proof = proof.reduceAllAssumptions();
-        else{
-            while(cnt > 0 && proof.getAssumptionsCount() > 0){
+        if (cnt < 0) proof = proof.reduceAllAssumptions();
+        else {
+            while (cnt > 0 && proof.getAssumptionsCount() > 0) {
                 proof = proof.reduceLastAssumption();
                 --cnt;
             }
         }
-        out.println(proof.toString(true, true));
+        out.println(proof.toString(printComments, reduceUnnecessaryLines));
     }
 
 

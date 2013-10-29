@@ -13,6 +13,16 @@ import java.util.Set;
 public class AxiomSchemeExpression extends Expression {
     int id;
 
+    @Override
+    protected Expression negateImpl() {
+        throw new UnsupportedOperationException("Axiom scheme expressions isn't meant to be used with negate facility");
+    }
+
+    @Override
+    public Expression replaceVarsWithExpressions(Map<String, Expression> substitution) {
+        throw new UnsupportedOperationException("Axiom scheme expressions isn't meant to be used with replaceVarsWithExpressions facility");
+    }
+
     public int getId() {
         return id;
     }
@@ -66,7 +76,7 @@ public class AxiomSchemeExpression extends Expression {
     }
 
     @Override
-    public String toString() {
+    public String toStringImpl() {
         return expression.toString();
     }
 }

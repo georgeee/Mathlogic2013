@@ -2,7 +2,6 @@ package ru.georgeee.mathlogic.propositionalcalculus;
 
 import ru.georgeee.mathlogic.propositionalcalculus.expression.AxiomSchemeExpression;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.Expression;
-import ru.georgeee.mathlogic.propositionalcalculus.expression.operator.Implication;
 import ru.georgeee.mathlogic.propositionalcalculus.parser.token.AxiomTokenHolder;
 
 import java.util.ArrayList;
@@ -16,12 +15,21 @@ import java.util.ArrayList;
  */
 public abstract class BaseAxiomSchemeList implements AxiomSchemeList {
 
-    protected BaseAxiomSchemeList() {
-        super();
-    }
-
     ArrayList<AxiomSchemeExpression> axiomSchemes = new ArrayList<AxiomSchemeExpression>();
     AxiomTokenHolder axiomTokenHolder = new AxiomTokenHolder();
+
+    protected void initAxiomSchemes(String text) {
+        initAxiomSchemes(text.split("\n"));
+    }
+
+    protected void initAxiomSchemes(String[] lines) {
+        for (String line : lines) {
+            line = Main.removeComments(line).trim();
+            if (!line.isEmpty()) {
+                addAxiomScheme(line);
+            }
+        }
+    }
 
     protected void addAxiomScheme(AxiomSchemeExpression axiom) {
         axiom.setId(axiomSchemes.size());
@@ -29,8 +37,7 @@ public abstract class BaseAxiomSchemeList implements AxiomSchemeList {
     }
 
     protected void addAxiomScheme(String source) {
-        ExpressionCompiler compiler = new ExpressionCompiler(source, axiomTokenHolder);
-        addAxiomScheme((AxiomSchemeExpression) compiler.compile());
+        addAxiomScheme((AxiomSchemeExpression) axiomTokenHolder.getExpressionCompiler().compile(source));
     }
 
     @Override

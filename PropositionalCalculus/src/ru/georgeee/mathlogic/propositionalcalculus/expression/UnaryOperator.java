@@ -21,7 +21,7 @@ public abstract class UnaryOperator extends Expression {
     protected abstract String getOperationStringRepresentation();
 
     @Override
-    public String toString() {
+    public String toStringImpl() {
         return "(" + getOperationStringRepresentation() + operand + ")";
     }
 
@@ -35,5 +35,16 @@ public abstract class UnaryOperator extends Expression {
         return evaluateImpl(operand.evaluate(variableMapping));
     }
 
+
+    @Override
+    public Expression replaceVarsWithExpressions(Map<String, Expression> substitution) {
+        Expression newOperand = operand.replaceVarsWithExpressions(substitution);
+        if (operand != newOperand)
+            return createNewInstance(newOperand);
+        return this;
+    }
+
     protected abstract boolean evaluateImpl(boolean value);
+
+    protected abstract Expression createNewInstance(Expression operand);
 }

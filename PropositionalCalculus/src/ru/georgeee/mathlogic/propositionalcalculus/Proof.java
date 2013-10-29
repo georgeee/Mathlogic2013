@@ -7,8 +7,8 @@ import ru.georgeee.mathlogic.propositionalcalculus.parser.token.TokenHolder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -21,30 +21,64 @@ public class Proof {
     HashMap<Expression, Entry> tautologies = new HashMap<Expression, Entry>();
     HashMap<Expression, Integer> assumptions = new HashMap<Expression, Integer>();
     ArrayList<Expression> assumptionList = new ArrayList<Expression>();
-    TokenHolder tokenHolder = new TokenHolder();
+    TokenHolder tokenHolder;
     ArrayList<Entry> tautologiesList = new ArrayList<Entry>();
     HashMap<Expression, ArrayList<Implication>> mpCandidates = new HashMap<Expression, ArrayList<Implication>>();
     Expression targetExpression = null;
     final AxiomSchemeList axiomSchemeList;
 
-    public Proof(AxiomSchemeList axiomSchemeList) {
+    public Proof(AxiomSchemeList axiomSchemeList, TokenHolder tokenHolder) {
         this.axiomSchemeList = axiomSchemeList;
+        this.tokenHolder = tokenHolder;
+    }
+
+    public Proof(AxiomSchemeList axiomSchemeList) {
+        this(axiomSchemeList, axiomSchemeList.getTokenHolder());
+    }
+
+    public Proof() {
+        this(XmlAxiomSchemeList.getStandardAxiomSchemeListInstance());
+    }
+
+    public TokenHolder getTokenHolder() {
+        return tokenHolder;
     }
 
     public Expression getTargetExpression() {
-        return targetExpression == null ? (tautologiesList.size()>0?tautologiesList.get(tautologiesList.size()-1).expression:null) : targetExpression;
+        return targetExpression == null ? (tautologiesList.size() > 0 ? tautologiesList.get(tautologiesList.size() - 1).expression : null) : targetExpression;
     }
 
     public void setTargetExpression(Expression targetExpression) {
         this.targetExpression = targetExpression;
     }
 
-    public boolean isTargetAchieved(){
-        if(targetExpression == null) return true;
+    public boolean isTargetAchieved() {
+        if (targetExpression == null) return true;
         return addCheckTautology(targetExpression) != null;
     }
 
-
+    public void addAllFromProof(Proof proof){
+        if(proof.axiomSchemeList != axiomSchemeList) throw new UnsupportedOperationException("Can't merge proofs with different axiom scheme lists");
+        for(Expression assumption: proof.assumptionList){
+            if(!assumptions.containsKey(assumption)){
+                addAssumption(assumption);
+            }
+        }
+        for(Map.Entry<Expression, ArrayList<Implication>> entry : proof.mpCandidates.entrySet()){
+            if(mpCandidates.containsKey(entry.getKey())){
+                for(Implication implication: entry.getValue())
+                    mpCandidates.get(entry.getKey()).add(implication);
+            }       else{
+                mpCandidates.put(entry.getKey(), entry.getValue());
+            }
+        }
+        for(Entry tautology: proof.tautologiesList){
+            if(!tautologies.containsKey(tautology.getExpression())){
+                tautologies.put(tautology.getExpression(), tautology);
+                tautologiesList.add(tautology);
+            }
+        }
+    }
 
     public Proof reduceAllAssumptions() {
         Proof proof = this;
@@ -63,13 +97,14 @@ public class Proof {
     }
 
     public Proof reduceLastAssumption() {
-        return reduceAssumption(assumptionList.get(assumptionList.size()-1));
+        return reduceAssumption(assumptionList.get(assumptionList.size() - 1));
     }
+
     public Proof reduceAssumption(Expression assumption) {
-        Proof proof = new Proof(axiomSchemeList);
+        Proof proof = new Proof(axiomSchemeList, tokenHolder);
         for (Expression _assumption : assumptionList) {
-            if(!_assumption.equals(assumption))
-            proof.addAssumption(_assumption);
+            if (!_assumption.equals(assumption))
+                proof.addAssumption(_assumption);
         }
         for (Entry entry : tautologiesList) {
             if (entry instanceof AssumptionEntry) {
@@ -85,7 +120,7 @@ public class Proof {
                 axiomSchemeList.addMPImplicationProof(proof, assumption, mpEntry.implication);
             }
         }
-        if(targetExpression != null) proof.setTargetExpression(new Implication(assumption, targetExpression));
+        if (targetExpression != null) proof.setTargetExpression(new Implication(assumption, targetExpression));
         return proof;
     }
 
@@ -114,10 +149,10 @@ public class Proof {
         }
         StringBuilder sb = new StringBuilder();
 
-        for(Iterator<Expression> assumptionIter = assumptionList.iterator(); assumptionIter.hasNext();){
+        for (Iterator<Expression> assumptionIter = assumptionList.iterator(); assumptionIter.hasNext(); ) {
             Expression assumption = assumptionIter.next();
             sb.append(assumption);
-            if(assumptionIter.hasNext()){
+            if (assumptionIter.hasNext()) {
                 sb.append(", ");
             }
         }
@@ -132,16 +167,16 @@ public class Proof {
                 if (printComments) {
                     if (entry instanceof MPEntry) {
                         sb.append(" //MP #")
-                                .append(expressionIds.get(((MPEntry) entry).implication.getLeftOperand())+1)
+                                .append(expressionIds.get(((MPEntry) entry).implication.getLeftOperand()) + 1)
                                 .append(", #")
-                                .append(expressionIds.get(((MPEntry) entry).implication)+1);
+                                .append(expressionIds.get(((MPEntry) entry).implication) + 1);
                     } else if (entry instanceof AssumptionEntry)
-                        sb.append(" //Assumption #").append(assumptions.get(entry.getExpression())+1);
+                        sb.append(" //Assumption #").append(assumptions.get(entry.getExpression()) + 1);
                     else if (entry instanceof AxiomSchemeEntry)
-                        sb.append(" //Axiom scheme #").append(((AxiomSchemeEntry) entry).getAxiomSchemeExpression().getId()+1);
+                        sb.append(" //Axiom scheme #").append(((AxiomSchemeEntry) entry).getAxiomSchemeExpression().getId() + 1);
                 }
                 sb.append('\n');
-                if(printComments) expressionIds.put(entry.getExpression(), expressionIds.size());
+                if (printComments) expressionIds.put(entry.getExpression(), expressionIds.size());
             }
         }
         return sb.toString();
@@ -154,14 +189,14 @@ public class Proof {
 
     protected void addCheckMP(Implication implication) {
         if (tautologies.containsKey(implication.getLeftOperand())) {
-            if(!tautologies.containsKey(implication.getRightOperand())){
+            if (!tautologies.containsKey(implication.getRightOperand())) {
                 MPEntry mpEntry = new MPEntry(implication.getRightOperand(), implication, tautologiesList.size());
                 tautologies.put(implication.getRightOperand(), mpEntry);
                 tautologiesList.add(mpEntry);
             }
         } else {
             ArrayList<Implication> implications = mpCandidates.get(implication.getLeftOperand());
-            if(implications == null){
+            if (implications == null) {
                 implications = new ArrayList<Implication>();
                 mpCandidates.put(implication.getLeftOperand(), implications);
             }
@@ -169,10 +204,10 @@ public class Proof {
         }
     }
 
-    protected void checkMPCandidates(Expression leftExpression){
-        if(mpCandidates.containsKey(leftExpression)){
+    protected void checkMPCandidates(Expression leftExpression) {
+        if (mpCandidates.containsKey(leftExpression)) {
             ArrayList<Implication> implications = mpCandidates.remove(leftExpression);
-            for(Implication implication: implications){
+            for (Implication implication : implications) {
                 addCheckMP(implication);
             }
         }
@@ -181,6 +216,7 @@ public class Proof {
     public Entry addCheckTautology(Expression expression) {
         Entry expressionEntry = null;
         if (tautologies.containsKey(expression)) {
+            checkMPCandidates(expression);
             if (expression instanceof Implication)
                 addCheckMP((Implication) expression);
             return tautologies.get(expression);
@@ -190,7 +226,8 @@ public class Proof {
         }
         if (expressionEntry == null) {
             AxiomSchemeExpression axiomScheme = axiomSchemeList.getMatchingAxiomScheme(expression);
-            if(axiomScheme != null) expressionEntry = new AxiomSchemeEntry(expression, axiomScheme, tautologiesList.size());
+            if (axiomScheme != null)
+                expressionEntry = new AxiomSchemeEntry(expression, axiomScheme, tautologiesList.size());
         }
         if (expressionEntry != null) {
             tautologies.put(expression, expressionEntry);
@@ -203,10 +240,8 @@ public class Proof {
     }
 
     public Entry addCheckTautology(String source) {
-        ExpressionCompiler compiler = new ExpressionCompiler(source, tokenHolder);
-        return addCheckTautology(compiler.compile());
+        return addCheckTautology(tokenHolder.getExpressionCompiler().compile(source));
     }
-
 
 
     public void addAssumption(Expression assumption) {
@@ -215,8 +250,7 @@ public class Proof {
     }
 
     public void addAssumption(String source) {
-        ExpressionCompiler compiler = new ExpressionCompiler(source, tokenHolder);
-        addAssumption(compiler.compile());
+        addAssumption(tokenHolder.getExpressionCompiler().compile(source));
     }
 
     public void clearAssumptions() {

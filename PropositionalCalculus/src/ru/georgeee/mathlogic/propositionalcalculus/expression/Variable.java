@@ -1,8 +1,9 @@
 package ru.georgeee.mathlogic.propositionalcalculus.expression;
 
+import ru.georgeee.mathlogic.propositionalcalculus.expression.operator.Not;
+
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * Created with IntelliJ IDEA.
@@ -12,20 +13,32 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * To change this template use File | Settings | File Templates.
  */
 public class Variable extends Expression {
-    protected String varName;
+    protected final String varName;
 
     public Variable(String varName) {
         this.varName = varName;
     }
 
     @Override
-    public String toString() {
+    public String toStringImpl() {
         return varName;
     }
 
     @Override
     public boolean evaluate(Map<String, Boolean> variableMapping) {
         return variableMapping.get(varName);
+    }
+
+    @Override
+    public Expression replaceVarsWithExpressions(Map<String, Expression> substitution) {
+        Expression replacement = substitution.get(varName);
+        if (replacement != null) return replacement;
+        return this;
+    }
+
+    @Override
+    public Expression negateImpl() {
+        return new Not(this);
     }
 
     @Override

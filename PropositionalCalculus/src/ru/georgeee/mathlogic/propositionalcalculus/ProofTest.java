@@ -3,6 +3,7 @@ package ru.georgeee.mathlogic.propositionalcalculus;
 import junit.framework.TestCase;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.Expression;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.operator.Implication;
+import ru.georgeee.mathlogic.propositionalcalculus.parser.token.TokenHolder;
 
 /**
  * Created with IntelliJ IDEA.
@@ -13,19 +14,27 @@ import ru.georgeee.mathlogic.propositionalcalculus.expression.operator.Implicati
  */
 public class ProofTest extends TestCase {
 
-    private static class SingleSchemeList extends BaseAxiomSchemeList{
+    private static class SingleSchemeList extends BaseAxiomSchemeList {
         public SingleSchemeList() {
             addAxiomScheme("a->(v->a)");
         }
 
         @Override
-        public void addAssumptionImplicationProof(Proof proof, Expression A, Expression Ci) {}
+        public void addAssumptionImplicationProof(Proof proof, Expression A, Expression Ci) {
+        }
 
         @Override
-        public void addMPImplicationProof(Proof proof, Expression A, Implication mpImplication) {}
+        public void addMPImplicationProof(Proof proof, Expression A, Implication mpImplication) {
+        }
 
         @Override
-        public void addSelfImplicationProof(Proof proof, Expression A) {}
+        public void addSelfImplicationProof(Proof proof, Expression A) {
+        }
+
+        @Override
+        public TokenHolder getTokenHolder() {
+            return new TokenHolder();
+        }
     }
 
     public void testOneAxiom() throws Exception {
@@ -36,7 +45,7 @@ public class ProofTest extends TestCase {
     }
 
     public void testStandartAxioms() throws Exception {
-        Proof proof = new Proof(StandardAxiomSchemeList.getInstance());
+        Proof proof = new Proof();
         assertNotNull(proof.addCheckTautology("A->A->A"));
         assertNotNull(proof.addCheckTautology("A->(A->A)->A"));
         assertNotNull(proof.addCheckTautology("(A->A->A)->(A->(A->A)->A)->(A->A)"));

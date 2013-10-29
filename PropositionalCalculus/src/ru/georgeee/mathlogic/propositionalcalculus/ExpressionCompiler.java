@@ -9,6 +9,7 @@ import ru.georgeee.mathlogic.propositionalcalculus.parser.TokenFinder;
 import ru.georgeee.mathlogic.propositionalcalculus.parser.token.Token;
 import ru.georgeee.mathlogic.propositionalcalculus.parser.token.TokenHolder;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -20,27 +21,23 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 public class ExpressionCompiler {
-    final String source;
     List<Token> tokens = null;
-    Expression result = null;
     int caret;
-    int maxPriority = -1;
+    int maxPriority;
     private final TokenHolder tokenHolder;
+    private HashMap<String, Expression> compiledExpressions = new HashMap<String, Expression>();
 
-    public ExpressionCompiler(String source) {
-        this(source, new TokenHolder());
-    }
-
-    public ExpressionCompiler(String source, TokenHolder tokenHolder) {
-        this.source = source;
+    public ExpressionCompiler(TokenHolder tokenHolder) {
         this.tokenHolder = tokenHolder;
 
     }
 
-    public Expression compile() {
+    public Expression compile(String source) {
+        Expression result = compiledExpressions.get(source);
         if (result == null) {
             TokenFinder tokenFinder = new TokenFinder(source, tokenHolder);
             tokens = tokenFinder.getTokens();
+            maxPriority = -1;
             for (Token token : tokens) {
                 int priority = token.type.getPriority();
                 if (priority > maxPriority) maxPriority = priority;
@@ -48,6 +45,7 @@ public class ExpressionCompiler {
             caret = 0;
             tokens.add(new Token(new TokenHolder.ClosingBracketTokenType()));
             result = recursiveDescentParseBrackets().expression;
+            compiledExpressions.put(source, result);
         }
         return result;
     }
@@ -96,5 +94,6 @@ public class ExpressionCompiler {
         if (tokens.getFirst().expression == null) throw new TokenCompileException("Null expression resulted");
         return tokens.getFirst();
     }
+
 
 }

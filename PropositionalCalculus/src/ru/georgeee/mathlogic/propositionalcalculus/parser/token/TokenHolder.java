@@ -1,5 +1,6 @@
 package ru.georgeee.mathlogic.propositionalcalculus.parser.token;
 
+import ru.georgeee.mathlogic.propositionalcalculus.ExpressionCompiler;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.Expression;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.StringConstants;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.Variable;
@@ -32,6 +33,13 @@ public class TokenHolder {
     ManualTokenTypeFactory[] manualTokenTypeFactories = null;
     AhoTokenType[] ahoTokenTypes = null;
 
+    protected ExpressionCompiler expressionCompiler;
+
+    public ExpressionCompiler getExpressionCompiler() {
+        if (expressionCompiler == null) expressionCompiler = new ExpressionCompiler(this);
+        return expressionCompiler;
+    }
+
     public ManualTokenTypeFactory[] getManualTokenTypeFabrics() {
         if (manualTokenTypeFactories == null) manualTokenTypeFactories = generateManualTokenTypeFabrics();
         return manualTokenTypeFactories;
@@ -42,7 +50,7 @@ public class TokenHolder {
                 new ManualTokenTypeFactory() {
                     @Override
                     public TokenType getTokenType(final String part) {
-                        if (!part.matches("^[a-zA-Z0-9_]+$")) return null;
+                        if (!part.matches("^[a-zA-Z0-9_α-ωΑ-ΣΤ-Ω]+$")) return null;
                         return new TokenType() {
                             @Override
                             public Expression getExpression(Expression leftOperand, Expression rightOperand) {
