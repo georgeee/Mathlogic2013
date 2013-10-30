@@ -9,7 +9,6 @@ import ru.georgeee.mathlogic.propositionalcalculus.parser.TokenFinder;
 import ru.georgeee.mathlogic.propositionalcalculus.parser.token.Token;
 import ru.georgeee.mathlogic.propositionalcalculus.parser.token.TokenHolder;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -21,11 +20,10 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 public class ExpressionCompiler {
+    private final TokenHolder tokenHolder;
     List<Token> tokens = null;
     int caret;
     int maxPriority;
-    private final TokenHolder tokenHolder;
-    private HashMap<String, Expression> compiledExpressions = new HashMap<String, Expression>();
 
     public ExpressionCompiler(TokenHolder tokenHolder) {
         this.tokenHolder = tokenHolder;
@@ -33,21 +31,16 @@ public class ExpressionCompiler {
     }
 
     public Expression compile(String source) {
-        Expression result = compiledExpressions.get(source);
-        if (result == null) {
-            TokenFinder tokenFinder = new TokenFinder(source, tokenHolder);
-            tokens = tokenFinder.getTokens();
-            maxPriority = -1;
-            for (Token token : tokens) {
-                int priority = token.type.getPriority();
-                if (priority > maxPriority) maxPriority = priority;
-            }
-            caret = 0;
-            tokens.add(new Token(new TokenHolder.ClosingBracketTokenType()));
-            result = recursiveDescentParseBrackets().expression;
-            compiledExpressions.put(source, result);
+        TokenFinder tokenFinder = new TokenFinder(source, tokenHolder);
+        tokens = tokenFinder.getTokens();
+        maxPriority = -1;
+        for (Token token : tokens) {
+            int priority = token.type.getPriority();
+            if (priority > maxPriority) maxPriority = priority;
         }
-        return result;
+        caret = 0;
+        tokens.add(new Token(new TokenHolder.ClosingBracketTokenType()));
+        return recursiveDescentParseBrackets().expression;
     }
 
     protected Token recursiveDescentParseBrackets() {

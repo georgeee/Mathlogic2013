@@ -39,4 +39,42 @@ public class FormulaBruteforceChecker {
         }
         return null;
     }
+
+    /**
+     *
+     * @param expression Caution! Expression should be a tautology
+     * @return
+     */
+    public Proof findFormulaProof(Expression expression){
+        TreeSet<String> variableSet = new TreeSet<String>();
+        expression.digVariables(variableSet);
+        ArrayList<String> variableList = new ArrayList<String>(variableSet.size());
+        for (String var : variableSet) variableList.add(var);
+        int maxMask = 1 << variableList.size();
+        ArrayList<Proof> proofStack = new ArrayList<Proof>();
+        ArrayList<Integer> szStack = new ArrayList<Integer>();
+        HashMap<String, Boolean> varMapping = new HashMap<String, Boolean>();
+        for (int mask = 0; mask < maxMask; ++mask) {
+            int sz = 1;
+            Proof proof = new Proof();
+            proof.setTargetExpression(expression);
+            for (int i = 0; i < variableList.size(); ++i) {
+                String varName = variableList.get(i);
+                boolean value = ((mask >> (variableList.size()-i-1)) & 1) == 1;
+                varMapping.put(varName, value);
+                proof.addAssumption(value ? varName : "!("+varName+")");
+            }
+            expression.proveExpression(proof, varMapping);
+            while(!szStack.isEmpty() && szStack.get(szStack.size()-1) == sz){
+                szStack.remove(szStack.size()-1);
+                Proof p2 = proofStack.remove(proofStack.size() - 1);
+                proof = proof.getAxiomSchemeList().mergeProofs(proof, p2);
+                sz <<= 1;
+            }
+            szStack.add(sz);
+            proofStack.add(proof);
+        }
+        assert proofStack.size() == 1;
+        return proofStack.iterator().next();
+    }
 }

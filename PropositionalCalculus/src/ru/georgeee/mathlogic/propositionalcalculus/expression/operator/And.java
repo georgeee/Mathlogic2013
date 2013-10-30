@@ -1,6 +1,7 @@
 package ru.georgeee.mathlogic.propositionalcalculus.expression.operator;
 
 import ru.georgeee.mathlogic.propositionalcalculus.Main;
+import ru.georgeee.mathlogic.propositionalcalculus.Proof;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.BinaryOperator;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.Expression;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.StringConstants;
@@ -18,6 +19,11 @@ public class And extends BinaryOperator {
     }
 
     @Override
+    protected int getClassUniqueId() {
+        return 0x75abc32f;
+    }
+
+    @Override
     protected String getOperationStringRepresentation() {
         return Main.ALT_PRINT_MODE ? ' ' + StringConstants.AND_OPERATION_ALT + ' ' : StringConstants.AND_OPERATION;
     }
@@ -30,5 +36,10 @@ public class And extends BinaryOperator {
     @Override
     protected Expression createNewInstance(Expression leftOperand, Expression rightOperand) {
         return new And(leftOperand, rightOperand);
+    }
+
+    @Override
+    protected void proveExpressionImpl(Proof proof, boolean leftOperandEvaluation, boolean rightOperandEvaluation, Expression leftOperand, Expression rightOperand) {
+        proof.getAxiomSchemeList().addAndOperatorProof(proof, leftOperandEvaluation, rightOperandEvaluation, leftOperand, rightOperand);
     }
 }

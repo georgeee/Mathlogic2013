@@ -18,11 +18,10 @@ import java.util.Map;
  * To change this template use File | Settings | File Templates.
  */
 public class Main {
-    public static boolean ALT_PRINT_MODE = false;
-
     static final int MODE_PROOF_CHECKER = 0;
     static final int MODE_DEDUCTION_EXPANDER = 1;
     static final int MODE_PROOF_FINDER = 2;
+    public static boolean ALT_PRINT_MODE = false;
     PrintWriter out;
     BufferedReader in;
 
@@ -76,14 +75,19 @@ public class Main {
                 mainInstance.expandDeduction(cnt, printComments, reduceUnnecessaryLines);
                 break;
             case MODE_PROOF_FINDER:
-                mainInstance.findProof();
+                mainInstance.findProof(printComments, reduceUnnecessaryLines);
                 break;
         }
         out.close();
         in.close();
     }
 
-    public void findProof() throws IOException {
+    public static String removeComments(String line) {
+        String[] parts = line.split("//");
+        return parts[0];
+    }
+
+    public void findProof(boolean printComments, boolean reduceUnnecessaryLines) throws IOException {
         String formulaSrc = in.readLine();
         FormulaBruteforceChecker bruteforceChecker = new FormulaBruteforceChecker();
         Expression formula;
@@ -97,8 +101,11 @@ public class Main {
         Map<String, Boolean> failingVarMapping = bruteforceChecker.findFailingVarMapping(formula);
         if (failingVarMapping != null) {
             out.println("Failed on var value set: " + failingVarMapping);
+        } else{
+            Proof proof = bruteforceChecker.findFormulaProof(formula);
+            System.gc();
+            proof.writeToPrintWriter(out, printComments, reduceUnnecessaryLines);
         }
-
     }
 
     public void checkProof() throws IOException {
@@ -106,30 +113,24 @@ public class Main {
         String line;
         int lineId = 1;
         boolean hasError = false;
-        while ((line = in.readLine()) != null) {
-            line = removeComments(line);
-            if (line.trim().isEmpty()) continue;
-            try {
+        try {
+            while ((line = in.readLine()) != null) {
+                line = removeComments(line);
+                if (line.trim().isEmpty()) continue;
                 if (proof.addCheckTautology(line) == null) {
                     hasError = true;
                     break;
                 }
-            } catch (CalcException ex) {
-                hasError = true;
-                break;
+                ++lineId;
             }
-            ++lineId;
+        } catch (CalcException ex) {
+            hasError = true;
         }
         if (hasError) {
             out.println("Доказательство некорректно начиная с " + lineId + " высказывания.");
         } else {
             out.println("Доказательство корректно.");
         }
-    }
-
-    public static String removeComments(String line) {
-        String[] parts = line.split("//");
-        return parts[0];
     }
 
     public void expandDeduction(int cnt, boolean printComments, boolean reduceUnnecessaryLines) throws IOException {
@@ -165,7 +166,7 @@ public class Main {
                 --cnt;
             }
         }
-        out.println(proof.toString(printComments, reduceUnnecessaryLines));
+        proof.writeToPrintWriter(out, printComments, reduceUnnecessaryLines);
     }
 
 

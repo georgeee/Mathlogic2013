@@ -1,5 +1,8 @@
 package ru.georgeee.mathlogic.propositionalcalculus.expression;
 
+import ru.georgeee.mathlogic.propositionalcalculus.Proof;
+
+import java.io.PrintWriter;
 import java.util.Map;
 import java.util.Set;
 
@@ -21,6 +24,11 @@ public class AxiomSchemeExpression extends Expression {
     @Override
     public Expression replaceVarsWithExpressions(Map<String, Expression> substitution) {
         throw new UnsupportedOperationException("Axiom scheme expressions isn't meant to be used with replaceVarsWithExpressions facility");
+    }
+
+    @Override
+    public void proveExpression(Proof proof, Map<String, Boolean> variableMapping) {
+        throw new UnsupportedOperationException("Axiom scheme expressions isn't meant to be used with proveExpression facility");
     }
 
     public int getId() {
@@ -76,7 +84,37 @@ public class AxiomSchemeExpression extends Expression {
     }
 
     @Override
-    public String toStringImpl() {
+    public String toString() {
         return expression.toString();
+    }
+
+    @Override
+    public void appendToStringBuilder(StringBuilder sb) {
+        expression.appendToStringBuilder(sb);
+    }
+
+    @Override
+    public void printToPrintWriter(PrintWriter printWriter) {
+        expression.printToPrintWriter(printWriter);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if(o==null) return false;
+        if(o.hashCode()!=hashCode()) return false;
+        if (this == o) return true;
+        if (!(o instanceof AxiomSchemeExpression)) return false;
+        if (!super.equals(o)) return false;
+
+        AxiomSchemeExpression that = (AxiomSchemeExpression) o;
+
+        if (!expression.equals(that.expression)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCodeImpl() {
+        return expression.hashCode()^0x4732dbfc;
     }
 }

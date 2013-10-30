@@ -77,8 +77,16 @@
                 ((A → B) → ((¬B) → (¬A))) //MP #28, #30
             ]]>
         </contrapositionRule>
+        <assumptionReduceEnd>
+            <![CDATA[
+               (A → B) → (¬A → B) → (A ∨ ¬A) → B
+                (¬A → B) → (A ∨ ¬A → B)
+                A ∨ ¬A → B
+                B
+            ]]>
+        </assumptionReduceEnd>
         <tertiumNonDatur>
-            <![CDATA[[
+            <![CDATA[
                 (A → (A ∨ (¬A))) //Axiom scheme #6
                 ((A → (A ∨ (¬A))) → ((A → (¬(A ∨ (¬A)))) → (¬A))) //Axiom scheme #9
                 (((A → (A ∨ (¬A))) → ((A → (¬(A ∨ (¬A)))) → (¬A))) → ((A → (A ∨ (¬A))) → ((A → (A ∨ (¬A))) → ((A → (¬(A ∨ (¬A)))) → (¬A))))) //Axiom scheme #1

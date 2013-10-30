@@ -27,5 +27,20 @@ public interface AxiomSchemeList {
 
     public void addSelfImplicationProof(Proof proof, Expression A);
 
+    public void addTertiumNonDaturProof(Proof proof, Expression A);
+
+    public void addAndOperatorProof(Proof proof, boolean leftOperandEvaluation,
+                                    boolean rightOperandEvaluation,
+                                    Expression leftOperand, Expression rightOperand);
+    public void addOrOperatorProof(Proof proof, boolean leftOperandEvaluation,
+                                   boolean rightOperandEvaluation,
+                                   Expression leftOperand, Expression rightOperand);
+    public void addImplicationOperatorProof(Proof proof, boolean leftOperandEvaluation,
+                                            boolean rightOperandEvaluation,
+                                            Expression leftOperand, Expression rightOperand);
+    public void addNotOperatorProof(Proof proof, boolean operandEvaluation, Expression operand);
+
+    public Proof mergeProofs(Proof A, Proof B);
+
     public TokenHolder getTokenHolder();
 }

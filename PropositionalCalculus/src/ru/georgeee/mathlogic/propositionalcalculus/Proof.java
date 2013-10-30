@@ -5,6 +5,7 @@ import ru.georgeee.mathlogic.propositionalcalculus.expression.Expression;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.operator.Implication;
 import ru.georgeee.mathlogic.propositionalcalculus.parser.token.TokenHolder;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -45,7 +46,13 @@ public class Proof {
     }
 
     public Expression getTargetExpression() {
-        return targetExpression == null ? (tautologiesList.size() > 0 ? tautologiesList.get(tautologiesList.size() - 1).expression : null) : targetExpression;
+        return getTargetExpression(true);
+    }
+
+    public Expression getTargetExpression(boolean returnLastIfNull) {
+        if(returnLastIfNull)
+            return targetExpression == null ? (tautologiesList.size() > 0 ? tautologiesList.get(tautologiesList.size() - 1).expression : null) : targetExpression;
+        else return targetExpression;
     }
 
     public void setTargetExpression(Expression targetExpression) {
@@ -74,8 +81,9 @@ public class Proof {
         }
         for(Entry tautology: proof.tautologiesList){
             if(!tautologies.containsKey(tautology.getExpression())){
-                tautologies.put(tautology.getExpression(), tautology);
-                tautologiesList.add(tautology);
+                Entry newEntry = tautology.cloneWithNewId(tautologiesList.size());
+                tautologies.put(newEntry.getExpression(), newEntry);
+                tautologiesList.add(newEntry);
             }
         }
     }
@@ -124,8 +132,39 @@ public class Proof {
         return proof;
     }
 
+    public AxiomSchemeList getAxiomSchemeList() {
+        return axiomSchemeList;
+    }
 
-    public String toString(boolean printComments, boolean reduceUnnecessaryLines) {
+    public void writeToPrintWriter(PrintWriter out, boolean printComments, boolean reduceUnnecessaryLines){
+        this.out = out;
+        composeString(printComments, reduceUnnecessaryLines);
+        this.out = null;
+    }
+
+    private PrintWriter out;
+    private StringBuilder sb;
+
+    private void processToOut(String string){
+        if(out != null) out.print(string);
+        if(sb != null) sb.append(string);
+    }
+    private void processToOut(char ch){
+        if(out != null) out.print(ch);
+        if(sb != null) sb.append(ch);
+    }
+    private void processToOut(Expression expression){
+        if(out != null) expression.printToPrintWriter(out);
+        if(sb != null) expression.appendToStringBuilder(sb);
+    }
+
+    private void processToOut(int i) {
+        if(out != null) out.print(i);
+        if(sb != null) sb.append(i);
+    }
+
+
+    private void composeString(boolean printComments, boolean reduceUnnecessaryLines){
         boolean[] forPrint = null;
         if (reduceUnnecessaryLines) {
             forPrint = new boolean[tautologiesList.size()];
@@ -147,44 +186,59 @@ public class Proof {
                 }
             }
         }
-        StringBuilder sb = new StringBuilder();
 
         for (Iterator<Expression> assumptionIter = assumptionList.iterator(); assumptionIter.hasNext(); ) {
             Expression assumption = assumptionIter.next();
-            sb.append(assumption);
+            processToOut(assumption);
             if (assumptionIter.hasNext()) {
-                sb.append(", ");
+                processToOut(", ");
             }
         }
-        sb.append(" |- ").append(getTargetExpression()).append('\n');
+        processToOut(" |- ");
+        processToOut(getTargetExpression());
+        processToOut('\n');
 
         HashMap<Expression, Integer> expressionIds = new HashMap<Expression, Integer>();
 
         for (int i = 0; i < tautologiesList.size(); ++i) {
             if (!reduceUnnecessaryLines || forPrint[i]) {
                 Entry entry = tautologiesList.get(i);
-                sb.append(entry);
+                processToOut(entry.getExpression());
                 if (printComments) {
                     if (entry instanceof MPEntry) {
-                        sb.append(" //MP #")
-                                .append(expressionIds.get(((MPEntry) entry).implication.getLeftOperand()) + 1)
-                                .append(", #")
-                                .append(expressionIds.get(((MPEntry) entry).implication) + 1);
-                    } else if (entry instanceof AssumptionEntry)
-                        sb.append(" //Assumption #").append(assumptions.get(entry.getExpression()) + 1);
-                    else if (entry instanceof AxiomSchemeEntry)
-                        sb.append(" //Axiom scheme #").append(((AxiomSchemeEntry) entry).getAxiomSchemeExpression().getId() + 1);
+                        processToOut(" //MP #");
+                        processToOut(expressionIds.get(((MPEntry) entry).implication.getLeftOperand()) + 1);
+                        processToOut(", #");
+                        processToOut(expressionIds.get(((MPEntry) entry).implication) + 1);
+                    } else if (entry instanceof AssumptionEntry) {
+                        processToOut(" //Assumption #");
+                        processToOut(assumptions.get(entry.getExpression()) + 1);
+                    }else if (entry instanceof AxiomSchemeEntry){
+                        processToOut(" //Axiom scheme #");
+                        processToOut(((AxiomSchemeEntry) entry).getAxiomSchemeExpression().getId() + 1);
+                    }else assert false;
                 }
-                sb.append('\n');
+                processToOut('\n');
                 if (printComments) expressionIds.put(entry.getExpression(), expressionIds.size());
             }
         }
-        return sb.toString();
+    }
+
+    public String toString(boolean printComments, boolean reduceUnnecessaryLines) {
+        sb = new StringBuilder();
+        composeString(printComments, reduceUnnecessaryLines);
+        String result = sb.toString();
+        sb = null;
+        return result;
     }
 
     @Override
     public String toString() {
         return toString(true, true);
+    }
+
+    public Expression getLastAssumption(){
+        return assumptionList.isEmpty()?null:assumptionList.get(assumptionList.size()-1);
     }
 
     protected void addCheckMP(Implication implication) {
@@ -278,10 +332,16 @@ public class Proof {
             return expression.toString();
         }
 
+        public abstract Entry cloneWithNewId(int id);
     }
 
     public static class MPEntry extends Entry {
         protected Implication implication;
+
+        @Override
+        public MPEntry cloneWithNewId(int id) {
+            return new MPEntry(expression, implication, id);
+        }
 
         public MPEntry(Expression expression, Implication implication, int id) {
             super(expression, id);
@@ -297,6 +357,11 @@ public class Proof {
         public AssumptionEntry(Expression expression, int id) {
             super(expression, id);
         }
+
+        @Override
+        public AssumptionEntry cloneWithNewId(int id) {
+            return new AssumptionEntry(expression, id);
+        }
     }
 
     public static class AxiomSchemeEntry extends Entry {
@@ -309,6 +374,11 @@ public class Proof {
 
         public AxiomSchemeExpression getAxiomSchemeExpression() {
             return axiomSchemeExpression;
+        }
+
+        @Override
+        public AxiomSchemeEntry cloneWithNewId(int id) {
+            return new AxiomSchemeEntry(expression, axiomSchemeExpression, id);
         }
     }
 }
