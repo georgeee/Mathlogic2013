@@ -4,6 +4,7 @@ import ru.georgeee.mathlogic.propositionalcalculus.Main;
 import ru.georgeee.mathlogic.propositionalcalculus.Proof;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.BinaryOperator;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.Expression;
+import ru.georgeee.mathlogic.propositionalcalculus.expression.ExpressionHolder;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.StringConstants;
 
 /**
@@ -34,7 +35,7 @@ public class Implication extends BinaryOperator {
 
     @Override
     protected Expression createNewInstance(Expression leftOperand, Expression rightOperand) {
-        return new Implication(leftOperand, rightOperand);
+        return ExpressionHolder.instance().getImplicationExpression(leftOperand, rightOperand);
     }
 
     @Override

@@ -20,7 +20,7 @@ public abstract class BinaryOperator extends Expression implements Cloneable {
 
     @Override
     protected Expression negateImpl() {
-        return new Not(this);
+        return ExpressionHolder.instance().getNotExpression(this);
     }
 
     public Expression getLeftOperand() {
@@ -118,7 +118,7 @@ public abstract class BinaryOperator extends Expression implements Cloneable {
         boolean rightOperandEvaluation = rightOperand.evaluate(variableMapping);
         Expression needToBeProved = evaluateImpl(leftOperandEvaluation, rightOperandEvaluation)?this:negate();
         proveExpressionImpl(proof, leftOperandEvaluation, rightOperandEvaluation, leftOperand, rightOperand);
-        Proof.Entry entry = proof.addCheckTautology(new Implication(rightOperandEvaluation ? rightOperand : rightOperand.negate(), needToBeProved));
+        Proof.Entry entry = proof.addCheckTautology(ExpressionHolder.instance().getImplicationExpression(rightOperandEvaluation ? rightOperand : rightOperand.negate(), needToBeProved));
         assert entry != null;
         entry = proof.addCheckTautology(needToBeProved);
         assert entry != null;

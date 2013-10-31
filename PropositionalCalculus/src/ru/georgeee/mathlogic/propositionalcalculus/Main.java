@@ -89,7 +89,7 @@ public class Main {
 
     public void findProof(boolean printComments, boolean reduceUnnecessaryLines) throws IOException {
         String formulaSrc = in.readLine();
-        FormulaBruteforceChecker bruteforceChecker = new FormulaBruteforceChecker();
+        ProofMaker bruteforceChecker = new ProofMaker();
         Expression formula;
         try {
             formula = new TokenHolder().getExpressionCompiler().compile(formulaSrc);

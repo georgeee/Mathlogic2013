@@ -86,7 +86,7 @@ public abstract class UnaryOperator extends Expression {
 
     @Override
     public Expression negateImpl() {
-        return new Not(this);
+        return ExpressionHolder.instance().getNotExpression(this);
     }
 
     protected abstract boolean evaluateImpl(boolean value);

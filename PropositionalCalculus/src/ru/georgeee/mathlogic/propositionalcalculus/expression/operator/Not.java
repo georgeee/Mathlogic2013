@@ -3,6 +3,7 @@ package ru.georgeee.mathlogic.propositionalcalculus.expression.operator;
 import ru.georgeee.mathlogic.propositionalcalculus.Main;
 import ru.georgeee.mathlogic.propositionalcalculus.Proof;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.Expression;
+import ru.georgeee.mathlogic.propositionalcalculus.expression.ExpressionHolder;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.StringConstants;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.UnaryOperator;
 
@@ -37,7 +38,7 @@ public class Not extends UnaryOperator {
 
     @Override
     protected Expression createNewInstance(Expression operand) {
-        return new Not(operand);
+        return ExpressionHolder.instance().getNotExpression(operand);
     }
 
     @Override

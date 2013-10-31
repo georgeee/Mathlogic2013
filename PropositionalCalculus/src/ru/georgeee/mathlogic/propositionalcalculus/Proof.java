@@ -2,6 +2,7 @@ package ru.georgeee.mathlogic.propositionalcalculus;
 
 import ru.georgeee.mathlogic.propositionalcalculus.expression.AxiomSchemeExpression;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.Expression;
+import ru.georgeee.mathlogic.propositionalcalculus.expression.ExpressionHolder;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.operator.Implication;
 import ru.georgeee.mathlogic.propositionalcalculus.parser.token.TokenHolder;
 
@@ -128,7 +129,7 @@ public class Proof {
                 axiomSchemeList.addMPImplicationProof(proof, assumption, mpEntry.implication);
             }
         }
-        if (targetExpression != null) proof.setTargetExpression(new Implication(assumption, targetExpression));
+        if (targetExpression != null) proof.setTargetExpression(ExpressionHolder.instance().getImplicationExpression(assumption, targetExpression));
         return proof;
     }
 

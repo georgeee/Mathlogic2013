@@ -74,7 +74,7 @@ public class Variable extends Expression {
 
     @Override
     public Expression negateImpl() {
-        return new Not(this);
+        return ExpressionHolder.instance().getNotExpression(this);
     }
 
     @Override

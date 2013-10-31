@@ -2,6 +2,7 @@ package ru.georgeee.mathlogic.propositionalcalculus.parser.token;
 
 import ru.georgeee.mathlogic.propositionalcalculus.ExpressionCompiler;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.Expression;
+import ru.georgeee.mathlogic.propositionalcalculus.expression.ExpressionHolder;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.StringConstants;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.Variable;
 import ru.georgeee.mathlogic.propositionalcalculus.expression.operator.And;
@@ -54,7 +55,7 @@ public class TokenHolder {
                         return new TokenType() {
                             @Override
                             public Expression getExpression(Expression leftOperand, Expression rightOperand) {
-                                return new Variable(part);
+                                return ExpressionHolder.instance().getVariableExpression(part);
                             }
 
                             @Override
@@ -110,7 +111,7 @@ public class TokenHolder {
     static class AndTokenType extends AhoBothArgTokenType {
         @Override
         protected Expression getExpressionImpl(Expression leftOperand, Expression rightOperand) {
-            return new And(leftOperand, rightOperand);
+            return ExpressionHolder.instance().getAndExpression(leftOperand, rightOperand);
         }
 
         @Override
@@ -138,7 +139,7 @@ public class TokenHolder {
 
         @Override
         protected Expression getExpressionImpl(Expression rightOperand) {
-            return new Not(rightOperand);
+            return ExpressionHolder.instance().getNotExpression(rightOperand);
         }
 
         @Override
@@ -165,7 +166,7 @@ public class TokenHolder {
     static class OrTokenType extends AhoBothArgTokenType {
         @Override
         protected Expression getExpressionImpl(Expression leftOperand, Expression rightOperand) {
-            return new Or(leftOperand, rightOperand);
+            return ExpressionHolder.instance().getOrExpression(leftOperand, rightOperand);
         }
 
         @Override
@@ -192,7 +193,7 @@ public class TokenHolder {
     static class ImplicationTokenType extends AhoBothArgTokenType {
         @Override
         protected Expression getExpressionImpl(Expression leftOperand, Expression rightOperand) {
-            return new Implication(leftOperand, rightOperand);
+            return ExpressionHolder.instance().getImplicationExpression(leftOperand, rightOperand);
         }
 
         @Override
