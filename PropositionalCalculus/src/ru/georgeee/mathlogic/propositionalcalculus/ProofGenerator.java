@@ -35,7 +35,7 @@ public class ProofGenerator {
             }
         }
         this.expressions = new Expression[expressions.size()];
-        System.out.println(expressions.get(expressions.size()-1)+" -> "+expressions.size());
+//        System.out.println(expressions.get(expressions.size()-1)+" -> "+expressions.size());
         expressions.toArray(this.expressions);
     }
 
