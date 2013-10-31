@@ -44,7 +44,7 @@ public class Main {
                 inputFileName = args[++i];
             } else if (arg.equals("-o")) {
                 outputFileName = args[++i];
-            } else if (arg.equals("-math") || arg.equals("alt")) {
+            } else if (arg.equals("-math") || arg.equals("-alt")) {
                 ALT_PRINT_MODE = true;
             } else if (arg.equals("-m")) {
                 String _mode = args[++i].toLowerCase();
