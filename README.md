@@ -38,6 +38,7 @@ Optional parametrs:
 * -math/-alt (alternate mode of printing, with characters ∧∨→¬)
 * -npc (Do not print comments)
 * -nr (Do not reduce unused expressions in proof, not recommended to use)
+* -pi (Print lengths of base proofs)
 
 ```
 java -jar PropositionalCalculus.jar -m f -i tests_pf/6.in -o tests_pf/6.out
