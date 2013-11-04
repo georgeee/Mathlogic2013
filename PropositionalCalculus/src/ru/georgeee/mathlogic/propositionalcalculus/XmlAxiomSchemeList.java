@@ -112,7 +112,10 @@ public class XmlAxiomSchemeList extends BaseAxiomSchemeList {
     }
 
     protected ProofGenerator createProofGenerator(String proofXPathSubString, Document document) throws XPathExpressionException {
-        return new ProofGenerator(getElementText("/axiomSchemeList/proofs/" + proofXPathSubString, document), tokenHolder);
+        ProofGenerator proofGenerator = new ProofGenerator(getElementText("/axiomSchemeList/proofs/" + proofXPathSubString, document), tokenHolder);
+        if( Main.PRINT_PROOF_GENERATOR_INFO)
+            System.out.println(proofXPathSubString+" (last: "+proofGenerator.last()+"): "+proofGenerator.size()+" lines");
+        return proofGenerator;
     }
 
     protected void readConfigsFromXMLDocument(Document document) throws XPathExpressionException {

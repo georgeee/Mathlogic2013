@@ -22,6 +22,7 @@ public class Main {
     static final int MODE_DEDUCTION_EXPANDER = 1;
     static final int MODE_PROOF_FINDER = 2;
     public static boolean ALT_PRINT_MODE = false;
+    public static boolean PRINT_PROOF_GENERATOR_INFO = false;
     PrintWriter out;
     BufferedReader in;
 
@@ -44,6 +45,8 @@ public class Main {
                 inputFileName = args[++i];
             } else if (arg.equals("-o")) {
                 outputFileName = args[++i];
+            } else if (arg.equals("-pi")) {
+                PRINT_PROOF_GENERATOR_INFO = true;
             } else if (arg.equals("-math") || arg.equals("-alt")) {
                 ALT_PRINT_MODE = true;
             } else if (arg.equals("-m")) {

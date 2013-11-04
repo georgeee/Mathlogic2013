@@ -14,8 +14,8 @@ import java.util.Map;
  * To change this template use File | Settings | File Templates.
  */
 public class ProofGenerator {
-    Expression[] expressions;
-    TokenHolder tokenHolder;
+    protected Expression[] expressions;
+    protected TokenHolder tokenHolder;
 
     public ProofGenerator(Expression[] expressions, TokenHolder tokenHolder) {
         this.expressions = expressions;
@@ -24,6 +24,18 @@ public class ProofGenerator {
 
     public ProofGenerator(String proofText, TokenHolder tokenHolder) {
         this(proofText.split("\n"), tokenHolder);
+    }
+
+    public int size(){
+        return expressions.length;
+    }
+
+    public Expression get(int i){
+        return expressions[i];
+    }
+
+    public Expression last(){
+        return expressions[expressions.length-1];
     }
 
     public ProofGenerator(String[] lines, TokenHolder tokenHolder) {
@@ -35,7 +47,6 @@ public class ProofGenerator {
             }
         }
         this.expressions = new Expression[expressions.size()];
-//        System.out.println(expressions.get(expressions.size()-1)+" -> "+expressions.size());
         expressions.toArray(this.expressions);
     }
 
