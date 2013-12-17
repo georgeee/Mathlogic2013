@@ -2,17 +2,6 @@ module FormulaReplace where
 import DataDefinitions
 import qualified Data.Set as Set
 
-isFreeInBoth var f1 f2 = (isFree var f1) && (isFree var f2)
-
-isFree :: Var -> Formula -> Bool
-isFree var (Not f) = isFree var f
-isFree var (Or f1 f2) = isFreeInBoth var f1 f2
-isFree var (Impl f1 f2) = isFreeInBoth var f1 f2
-isFree var (And f1 f2) = isFreeInBoth var f1 f2
-isFree var (Exists subvar f) = (subvar /= var) && (isFree var f)
-isFree var (ForAll subvar f) = (subvar /= var) && (isFree var f)
-isFree _ _ = True
-
 replaceBinaryImpl constructor f1 f2 x y
         = do subRes1 <- replace f1 x y
              subRes2 <- replace f2 x y

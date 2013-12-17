@@ -86,7 +86,7 @@ parseAtomicFormula = do skipSpaces
             parseWithQuantor ch constructor = do
                 char ch
                 var <- parseVar
-                formula <- parseFormula
+                formula <- parseAtomicFormula
                 return (constructor var formula)
 
 parseFormula = buildExpressionParser table parseAtomicFormula
