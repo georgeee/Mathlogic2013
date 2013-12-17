@@ -1,9 +1,9 @@
 module DataDefinitions where
 
 data Var = Var String
-    deriving Eq
+    deriving (Eq, Ord)
 data Term = VarTerm Var | FunctionalTerm String [Term]
-    deriving Eq
+    deriving (Eq, Ord)
 data Formula = Predicate String [Term]
     |Not Formula
     |And Formula Formula

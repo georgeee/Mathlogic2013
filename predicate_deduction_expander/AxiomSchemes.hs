@@ -1,5 +1,6 @@
 module AxiomSchemes where
 import DataDefinitions
+import FormulaReplace
 
 testAxiomScheme1 :: Formula -> Bool
 testAxiomScheme1 (Impl a (Impl b c)) = a==c
@@ -44,4 +45,10 @@ testAxiomScheme10 :: Formula -> Bool
 testAxiomScheme10 (Impl (Not (Not a)) _a) = a == _a
 testAxiomScheme10 _ = False
 
+testAxiomScheme11 :: Formula -> Bool
+testAxiomScheme11 (Impl (ForAll x f1) f2) = checkReplEq f1 f2 x
+testAxiomScheme11 _ = False
 
+testAxiomScheme12 :: Formula -> Bool
+testAxiomScheme12 (Impl f2 (Exists x f1)) = checkReplEq f1 f2 x
+testAxiomScheme12 _ = False
