@@ -1,4 +1,4 @@
-module FormulaReplace where
+module FormulaReplace(isFree, isFreeInTerm, vars, varSet, replace, replaceInTerm, checkReplEq,findFirstStructureMatching) where
 import DataDefinitions
 import qualified Data.Set as Set
 
@@ -23,6 +23,18 @@ varSet term = varsImpl term Set.empty
           varsImplTs [] = id
           varsImplTs (t:ts) = \set -> varsImplTs ts $ varsImpl t set
 vars = Set.toList . varSet
+
+isFree :: Formula -> Var -> Bool
+isFree (Predicate name terms) = \x -> all (isFreeInTerm x) terms
+isFree (Not f)      = isFree f
+isFree (And a b)    = \x -> (isFree a x) && (isFree b x)
+isFree (Or a b)     = \x -> (isFree a x) && (isFree b x)
+isFree (Impl a b)   = \x -> (isFree a x) && (isFree b x)
+isFree (Exists v f) = \x -> if v==x then False else isFree f x 
+isFree (ForAll v f) = \x -> if v==x then False else isFree f x 
+
+isFreeInTerm x (VarTerm v) = v /= x
+isFreeInTerm x (FunctionalTerm _ terms) = all (isFreeInTerm x) terms
 
 replace :: Formula -> Var -> Term -> Maybe Formula
 replace (Predicate name terms) = \x -> \y -> Just $ Predicate name $ map (replaceInTerm x y) terms

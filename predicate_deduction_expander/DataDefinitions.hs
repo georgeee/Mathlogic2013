@@ -11,7 +11,7 @@ data Formula = Predicate String [Term]
     |Impl Formula Formula
     |Exists Var Formula
     |ForAll Var Formula
-    deriving Eq
+    deriving (Eq, Ord)
 
 type ErrorMsg = String
 data DeductionStatement = DeductionStatement {
@@ -67,3 +67,6 @@ instance Show LinedProof where
 
 unLineProof :: LinedProof -> Proof
 unLineProof (LinedProof ds fs) = Proof ds $ map snd fs
+
+data ValidateError = NumberedVError Int String | NullError | VError String
+    deriving Show
