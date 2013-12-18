@@ -21,6 +21,8 @@ data DeductionStatement = DeductionStatement {
     deriving Eq
 data Proof = Proof { ds :: DeductionStatement, fList :: [Formula] }
     deriving Eq
+data LinedProof = LinedProof DeductionStatement [(Int,Formula)]
+    deriving Eq
 
 (-|-) f1 f2 = Or f1 f2
 infixl 2 -|-
@@ -60,4 +62,8 @@ instance Show DeductionStatement where
             print_conds [] = ""
 instance Show Proof where
     show p = foldr1 (\a -> \b -> a ++ "\n" ++ b) $ (show $ ds p) : (map show $ fList p)
+instance Show LinedProof where
+    show (LinedProof ds fs) = foldr1 (\a -> \b -> a ++ "\n" ++ b) $ (show $ ds) : (map (show.snd) $ fs)
 
+unLineProof :: LinedProof -> Proof
+unLineProof (LinedProof ds fs) = Proof ds $ map snd fs

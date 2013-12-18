@@ -118,17 +118,17 @@ readTerm = readSimple parseTerm
 readFormula = readSimple parseFormula 
 
 
-readFormulaList :: [String] -> Either ErrorMsg [Formula]
-readFormulaList fs = rfImpl fs 1 []
+readFormulaList :: [String] -> Either ErrorMsg [(Int,Formula)]
+readFormulaList fs = rfImpl fs 0 []
         where
             rfImpl [] n res = Right $ reverse res
             rfImpl ([]:ss) n res = rfImpl ss (n+1) res
             rfImpl (s:ss) n fList = case (readFormula s) of
-                                        (Left msg) -> Left $ msg ++ " at line #" ++ (show n)
-                                        (Right formula) -> rfImpl ss (n+1) (formula:fList)
+                                        (Left msg) -> Left $ msg ++ " at line #" ++ (show $ n + 1)
+                                        (Right formula) -> rfImpl ss (n+1) ((n,formula):fList)
 
-readProof :: String -> Either ErrorMsg Proof
+readProof :: String -> Either ErrorMsg LinedProof
 readProof str = rpImpl $ map (unpack . strip . pack) $ lines str
         where rpImpl (first:rest) = do ds <- readDeductionStatement first
                                        fs <- readFormulaList rest
-                                       return $ Proof ds fs 
+                                       return $ LinedProof ds fs 

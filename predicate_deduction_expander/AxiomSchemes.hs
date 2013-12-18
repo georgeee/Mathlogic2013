@@ -1,4 +1,4 @@
-module AxiomSchemes where
+module AxiomSchemes(testAxiomScheme, isAxiom) where
 import DataDefinitions
 import FormulaReplace
 
@@ -52,3 +52,16 @@ testAxiomScheme11 _ = False
 testAxiomScheme12 :: Formula -> Bool
 testAxiomScheme12 (Impl f2 (Exists x f1)) = checkReplEq f1 f2 x
 testAxiomScheme12 _ = False
+
+axiomSchemeList = [testAxiomScheme1, testAxiomScheme2, testAxiomScheme3,
+                   testAxiomScheme4, testAxiomScheme5, testAxiomScheme6,
+                   testAxiomScheme7, testAxiomScheme8, testAxiomScheme9,
+                   testAxiomScheme10, testAxiomScheme11, testAxiomScheme12]
+
+testAxiomScheme :: Int -> Formula -> Bool
+testAxiomScheme = (axiomSchemeList !!) . ((-) 1)
+
+isAxiom :: Formula -> Maybe Int
+isAxiom = isAxiomImpl 1 axiomSchemeList
+    where isAxiomImpl _ [] _ = Nothing
+          isAxiomImpl n (test:rest) f = if test f then Just n else isAxiomImpl (n+1) rest f
