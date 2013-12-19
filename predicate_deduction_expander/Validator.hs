@@ -41,7 +41,7 @@ checkForInferenceRule2 _ _ = False
 checkForInferenceRule3 (Impl (Exists x a) b) vs = (checkForInferenceRuleImpl a b vs) && (not $ isFree b x)
 checkForInferenceRule3 _ _ = False
 
-determineError state n formula = VError $ "Line #" ++ (show n) ++ " state" ++(show state) ++ " formula:" ++ (show formula)
+determineError state n formula = NumberedVError n $ "state" ++(show state) ++ " formula:" ++ (show formula)
 
 addFormula state formula = checkMP (addMP (addToTau state formula) formula) formula
         where addToTau vs@(ValidateState mpCs taus cs n) f = case M.lookup f taus of
@@ -62,21 +62,29 @@ addFormula state formula = checkMP (addMP (addToTau state formula) formula) form
                                     Nothing -> vs
                                     Just s -> foldl addToTau (ValidateState (M.delete f mpCs) taus cs n) $ S.toList s
 
-validateFormula :: ValidateState -> (Int,Formula) -> Either ValidateError ValidateState
+validateFormula :: ValidateState -> (Int,Formula) -> Either Error ValidateState
 validateFormula vs (n,f) = if any ($vs) $ map ($f) fList
                            then Right $ addFormula vs f
                            else Left $ determineError vs n f
                                where fList = [checkIfDsCondition, checkIfTautology, checkForInferenceRule2,
                                               checkForInferenceRule3, flip $ const checkIfIsAxiom]
 
-validateProof :: LinedProof -> Either ValidateError Proof
+validateDS (DeductionStatement fs f) = foldM (const validateDSImpl) () fs
+    where validateDSImpl f = if hasFree f
+                             then Left $ VError $ "Deduction condition " ++ (show f) ++ " has free variable(s)"
+                             else Right $ () 
+
+validateProof :: LinedProof -> Either Error Proof
 validateProof lp = case validateImpl lp of
                         (Left err) -> Left err
                         (Right validateState) -> extractProof lp validateState 
                    where
                         dsCondSet = S.fromList . dsConditions
                         initVaidateState ds = ValidateState M.empty M.empty (dsCondSet ds) 0
-                        validateImpl :: LinedProof -> Either ValidateError ValidateState
-                        validateImpl (LinedProof ds fs) = foldM validateFormula (initVaidateState ds) fs 
+                        validateImpl :: LinedProof -> Either Error ValidateState
+                        validateImpl (LinedProof ds fs) = do
+                            validateDS ds
+                            res <- foldM validateFormula (initVaidateState ds) fs 
+                            return res
                          
 

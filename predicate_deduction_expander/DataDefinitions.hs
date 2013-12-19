@@ -13,7 +13,6 @@ data Formula = Predicate String [Term]
     |ForAll Var Formula
     deriving (Eq, Ord)
 
-type ErrorMsg = String
 data DeductionStatement = DeductionStatement {
         dsConditions :: [Formula],
         dsFormula    :: Formula
@@ -68,5 +67,9 @@ instance Show LinedProof where
 unLineProof :: LinedProof -> Proof
 unLineProof (LinedProof ds fs) = Proof ds $ map snd fs
 
-data ValidateError = NumberedVError Int String | NullError | VError String
-    deriving Show
+data Error = NumberedVError Int String | NullError | VError String | ParseError String
+instance Show Error where
+    show (NumberedVError n msg) = "Validate error on line #" ++ (show n) ++ ": " ++ msg
+    show (VError msg) = "Validate error: " ++ msg
+    show (ParseError msg) = "Parse error: " ++ msg
+    show (NullError) = "Unknown error occured"

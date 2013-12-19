@@ -1,4 +1,4 @@
-module DeductionExpander{-(expandDeduction, tryExpandDeduction)-} where
+module DeductionExpander(expandDeduction, tryExpandDeduction) where
 import DataDefinitions
 import Data.List
 import FormulaReplace

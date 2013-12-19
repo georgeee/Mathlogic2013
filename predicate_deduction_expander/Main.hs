@@ -2,25 +2,24 @@ module Main where
 import Validator 
 import DataDefinitions
 import PredicateParser 
-import FormulaReplace
-import AxiomSchemes
 import DeductionExpander
-import "mtl" Control.Monad.State
+import System.Environment
 
+readValidateProof str = do
+    lp <- readProof str
+    p <- validateProof lp
+    return p
 
-readProofFromFile filename = do
-    content <- readFile filename 
-    return $ readProof content
-    
-readValidateProofFromFile filename = do
-    _proof <- readProofFromFile filename
-    return $ case _proof of Right proof -> validateProof proof
-tryExpandDeductionFromFile filename = do
-    _proof <- readValidateProofFromFile filename
-    let (Right proof) = _proof in
-        return $ tryExpandDeduction proof
+readValidateTryExpand str = do
+    p <- readValidateProof str
+    return $ tryExpandDeduction p
 
-pe :: ValidateError -> String
-pe (VError s) = s
+processMain inFile outFile = do
+    content <- readFile inFile
+    writeFile outFile (case readValidateTryExpand content of
+        (Left err) -> show err
+        (Right proof) -> show proof)
 
-rf = \s -> case readFormula s of Right f -> f
+main = do
+    args <- getArgs
+    processMain (args !! 0) (args !! 1) 

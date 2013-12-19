@@ -99,35 +99,35 @@ parseFormula = buildExpressionParser table parseAtomicFormula
 testParseFormula str = parse parseFormula "" str
 
 
-readDeductionStatement :: String -> Either ErrorMsg DeductionStatement
+readDeductionStatement :: String -> Either Error DeductionStatement
 readDeductionStatement = parseImpl . (map unpack) . (splitOn $ pack "|-") . pack
     where parseImpl (fsStr:fStr:[]) =
                 case (parse (parseFormula `sepBy` (char ',')) "left part of deduction statement" fsStr) of
-                    (Left msg) -> Left $ show msg
+                    (Left msg) -> Left $ ParseError $ show msg
                     (Right formulas) -> case (parse parseFormula "right part of deduction statement" fStr) of
-                                        (Left msg) -> Left $ ("In '" ++ fStr ++ "'") ++ (show msg)
+                                        (Left msg) -> Left $ ParseError $ ("In '" ++ fStr ++ "'") ++ (show msg)
                                         (Right formula) -> Right $ DeductionStatement formulas formula 
-          parseImpl _ = Left "too many |- delimeters"
+          parseImpl _ = Left $ ParseError "too many |- delimeters"
 
-readSimple :: Parser a -> String -> Either ErrorMsg a
+readSimple :: Parser a -> String -> Either Error a
 readSimple f str = case (parse f "" str) of
-                (Left msg) -> Left $ show msg
+                (Left msg) -> Left $ ParseError $ show msg
                 (Right result) -> Right result
 
 readTerm = readSimple parseTerm 
 readFormula = readSimple parseFormula 
 
 
-readFormulaList :: [String] -> Either ErrorMsg [(Int,Formula)]
+readFormulaList :: [String] -> Either Error [(Int,Formula)]
 readFormulaList fs = rfImpl fs 0 []
         where
             rfImpl [] n res = Right $ reverse res
             rfImpl ([]:ss) n res = rfImpl ss (n+1) res
             rfImpl (s:ss) n fList = case (readFormula s) of
-                                        (Left msg) -> Left $ msg ++ " at line #" ++ (show $ n + 1)
+                                        (Left (ParseError msg)) -> Left $ ParseError $ msg ++ " at line #" ++ (show $ n + 1)
                                         (Right formula) -> rfImpl ss (n+1) ((n,formula):fList)
 
-readProof :: String -> Either ErrorMsg LinedProof
+readProof :: String -> Either Error LinedProof
 readProof str = rpImpl $ map (unpack . strip . pack) $ lines str
         where rpImpl (first:rest) = do ds <- readDeductionStatement first
                                        fs <- readFormulaList rest

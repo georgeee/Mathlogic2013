@@ -1,3 +1,5 @@
+*.o
+*.hi
 *.iml
 out
 gen

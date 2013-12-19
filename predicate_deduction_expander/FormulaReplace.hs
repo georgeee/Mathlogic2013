@@ -1,4 +1,4 @@
-module FormulaReplace(isFree, isFreeInTerm, vars, varSet, replace, replaceInTerm, checkReplEq,findFirstStructureMatching) where
+module FormulaReplace(hasFree, isFree, isFreeInTerm, vars, varSet, replace, replaceInTerm, checkReplEq,findFirstStructureMatching) where
 import DataDefinitions
 import qualified Data.Set as Set
 
@@ -32,6 +32,17 @@ isFree (Or a b)     = \x -> (isFree a x) && (isFree b x)
 isFree (Impl a b)   = \x -> (isFree a x) && (isFree b x)
 isFree (Exists v f) = \x -> if v==x then False else isFree f x 
 isFree (ForAll v f) = \x -> if v==x then False else isFree f x 
+
+hasFree :: Formula -> Bool
+hasFree f = hasFreeImpl f Set.empty
+    where hasFreeImpl (Predicate _ terms) = not . Set.null . ((foldr1 Set.union $ map varSet terms) Set.\\)
+          hasFreeImpl (Not f)      = hasFreeImpl f
+          hasFreeImpl (And a b)    = \set -> (hasFreeImpl a set) || (hasFreeImpl b set)
+          hasFreeImpl (Or a b)     = \set -> (hasFreeImpl a set) || (hasFreeImpl b set)
+          hasFreeImpl (Impl a b)   = \set -> (hasFreeImpl a set) || (hasFreeImpl b set)
+          hasFreeImpl (Exists v f) = \set -> hasFreeImpl f (Set.insert v set)
+          hasFreeImpl (ForAll v f) = \set -> hasFreeImpl f (Set.insert v set)
+          
 
 isFreeInTerm x (VarTerm v) = v /= x
 isFreeInTerm x (FunctionalTerm _ terms) = all (isFreeInTerm x) terms
