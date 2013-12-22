@@ -1,7 +1,7 @@
 module Main where
 import Validator 
 import DataDefinitions
-import PredicateParser 
+import Parser 
 import DeductionExpander
 import System.Environment
 

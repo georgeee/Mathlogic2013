@@ -1,28 +1,7 @@
-module FormulaReplace(hasFree, isFree, isFreeInTerm, vars, varSet, replace, replaceInTerm, checkReplEq,findFirstStructureMatching) where
+module FormulaReplace(findFree, isFree, isFreeInTerm, vars, varSet, replace, replace', replaceInTerm, checkReplEq,findFirstStructureMatching) where
 import DataDefinitions
+import "mtl" Control.Monad.Writer
 import qualified Data.Set as Set
-
-replaceBinaryImpl constructor f1 f2 x y
-        = do subRes1 <- replace f1 x y
-             subRes2 <- replace f2 x y
-             return $ constructor subRes1 subRes2
-replaceUnaryImpl constructor f x y
-        = do subRes <- replace f x y
-             return $ constructor subRes
-replaceQuantorImpl :: (Var -> Formula -> Formula) -> Var -> Formula -> Var -> Term -> Maybe Formula
-replaceQuantorImpl constructor v f x y
-        = if (v == x) then Just $ constructor v f
-                      else if (Set.member v (varSet y)) then Nothing
-                           else do r <- replace f x y
-                                   return $ constructor v r
-
-varSet :: Term -> Set.Set Var
-varSet term = varsImpl term Set.empty
-    where varsImpl (VarTerm var) = Set.insert var
-          varsImpl (FunctionalTerm _ terms) = varsImplTs terms
-          varsImplTs [] = id
-          varsImplTs (t:ts) = \set -> varsImplTs ts $ varsImpl t set
-vars = Set.toList . varSet
 
 isFree :: Formula -> Var -> Bool
 isFree (Predicate name terms) = \x -> all (isFreeInTerm x) terms
@@ -33,28 +12,67 @@ isFree (Impl a b)   = \x -> (isFree a x) && (isFree b x)
 isFree (Exists v f) = \x -> if v==x then False else isFree f x 
 isFree (ForAll v f) = \x -> if v==x then False else isFree f x 
 
-hasFree :: Formula -> Bool
-hasFree f = hasFreeImpl f Set.empty
-    where hasFreeImpl (Predicate _ terms) = not . Set.null . ((foldr1 Set.union $ map varSet terms) Set.\\)
-          hasFreeImpl (Not f)      = hasFreeImpl f
-          hasFreeImpl (And a b)    = \set -> (hasFreeImpl a set) || (hasFreeImpl b set)
-          hasFreeImpl (Or a b)     = \set -> (hasFreeImpl a set) || (hasFreeImpl b set)
-          hasFreeImpl (Impl a b)   = \set -> (hasFreeImpl a set) || (hasFreeImpl b set)
-          hasFreeImpl (Exists v f) = \set -> hasFreeImpl f (Set.insert v set)
-          hasFreeImpl (ForAll v f) = \set -> hasFreeImpl f (Set.insert v set)
+findFree :: Formula -> Maybe Var
+findFree f = findFreeImpl f Set.empty
+    where findFreeImpl (Predicate _ terms) = \set -> let intersection = (foldr1 Set.union $ map varSet terms) Set.\\ set
+                                                 in if Set.null intersection then Nothing else Just $ Set.findMin intersection
+          findFreeImpl (Not f)      = findFreeImpl f
+          findFreeImpl (And a b)    = a <|> b
+          findFreeImpl (Or a b)     = a <|> b
+          findFreeImpl (Impl a b)   = a <|> b
+          findFreeImpl (Exists v f) = \set -> findFreeImpl f (Set.insert v set)
+          findFreeImpl (ForAll v f) = \set -> findFreeImpl f (Set.insert v set)
+          (<|>) a b set = case findFreeImpl a set of
+                              Nothing -> findFreeImpl b set
+                              m -> m
           
 
 isFreeInTerm x (VarTerm v) = v /= x
 isFreeInTerm x (FunctionalTerm _ terms) = all (isFreeInTerm x) terms
 
+varSet :: Term -> Set.Set Var
+varSet term = varsImpl term Set.empty
+    where varsImpl (VarTerm var) = Set.insert var
+          varsImpl (FunctionalTerm _ terms) = varsImplTs terms
+          varsImplTs [] = id
+          varsImplTs (t:ts) = \set -> varsImplTs ts $ varsImpl t set
+vars = Set.toList . varSet
+
 replace :: Formula -> Var -> Term -> Maybe Formula
-replace (Predicate name terms) = \x -> \y -> Just $ Predicate name $ map (replaceInTerm x y) terms
-replace (Not f)      = replaceUnaryImpl   Not    f
-replace (And a b)    = replaceBinaryImpl  And    a b
-replace (Or a b)     = replaceBinaryImpl  Or     a b
-replace (Impl a b)   = replaceBinaryImpl  Impl   a b
-replace (Exists v f) = replaceQuantorImpl Exists v f
-replace (ForAll v f) = replaceQuantorImpl ForAll v f 
+replace f v t = let (result, ws) = runWriter $ replace' f v t
+                in result
+
+replace' :: Formula -> Var -> Term -> Writer [Warning] (Maybe Formula)
+replace' (Predicate name terms) = \x -> \y -> return $ Just $ Predicate name $ map (replaceInTerm x y) terms
+replace' (Not f)      = replaceUnaryImpl   Not    f
+replace' (And a b)    = replaceBinaryImpl  And    a b
+replace' (Or a b)     = replaceBinaryImpl  Or     a b
+replace' (Impl a b)   = replaceBinaryImpl  Impl   a b
+replace' (Exists v f) = replaceQuantorImpl Exists v f
+replace' (ForAll v f) = replaceQuantorImpl ForAll v f 
+
+replaceBinaryImpl constructor f1 f2 x y
+        = do subRes1 <- replace' f1 x y
+             subRes2 <- replace' f2 x y
+             return $ do
+                        s1 <- subRes1
+                        s2 <- subRes2
+                        return $ constructor s1 s2
+replaceUnaryImpl constructor f x y
+        = do subRes <- replace' f x y
+             return $ do s <- subRes
+                         return $ constructor s
+replaceQuantorImpl :: (Var -> Formula -> Formula) -> Var -> Formula -> Var -> Term -> Writer [Warning] (Maybe Formula)
+replaceQuantorImpl constructor v f x y
+        = if (v == x) then return $ Just $ constructor v f
+                      else if (Set.member v (varSet y))
+                           then do
+                                 tell [ReplacementWarning y x (constructor v f)]
+                                 return Nothing
+                           else do
+                                 r <- replace' f x y
+                                 return $ do r' <- r
+                                             return $ constructor v r'
 
 replaceInTerm :: Var -> Term -> Term -> Term
 replaceInTerm x y term@(VarTerm var) = if (var == x) then y else term
@@ -99,9 +117,12 @@ findFirstStructureMatching f1 f2 var = case (ffsmImpl f1 f2 var) of
                     = if (name1 /= name2) then \_ -> Just Nothing else checkTermLists terms1 terms2 
           checkTerms _ _ = \_ -> Just Nothing 
 
-checkReplEq f1 f2 var = case do m <- findFirstStructureMatching f1 f2 var
-                                r <- replace f1 var m
-                                return $ r == f2
-                        of
-                           (Just True) -> True
-                           _ -> False
+checkReplEq :: Formula -> Formula -> Var -> Writer [Warning] Bool
+checkReplEq f1 f2 var = case findFirstStructureMatching f1 f2 var of
+                                Nothing -> return False
+                                Just term -> do
+                                    r <- replace' f1 var term
+                                    return $ isJustTrue $ do {r' <- r; return $ r' == f2 }
+             where isJustTrue m = case m of
+                                    (Just True) -> True
+                                    _ -> False

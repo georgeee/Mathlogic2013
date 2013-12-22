@@ -27,7 +27,6 @@ type ExpandState = State ExpandStateData
 composeResult state = Proof (pcDS $ permConds state) $ toFList state
     where toFList state = map snd $ sort $ map swap $ M.toList $ fMap state 
           swap (a,b) = (b,a)
-{-constState = State $ \state -> (composeResult state, state)-}
 
 createState (Proof (DeductionStatement conds f) fs)
       = let dsConds = init conds
@@ -78,9 +77,7 @@ addFormulaProof ci = do a <- getExpandee
                         if a == ci then addSelfProof
                         else do
                            isCond <- isDSCondition ci
-                           if isCond || (case isAxiom ci of
-                                            Nothing -> False
-                                            _ -> True)
+                           if isCond || (isAxiom ci)
                            then addDSConditionProof ci
                            else do
                               mpPred <- getMPPred ci

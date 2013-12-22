@@ -1,4 +1,4 @@
-module PredicateParser(readDeductionStatement, readTerm, readFormula, readProof) where
+module Parser(readDeductionStatement, readTerm, readFormula, readProof) where
 
 import DataDefinitions
 import Control.Applicative((<*))

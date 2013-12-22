@@ -67,9 +67,24 @@ instance Show LinedProof where
 unLineProof :: LinedProof -> Proof
 unLineProof (LinedProof ds fs) = Proof ds $ map snd fs
 
-data Error = NumberedVError Int String | NullError | VError String | ParseError String
+data Warning = ReplacementWarning {replacement :: Term, target :: Var, formula :: Formula}
+             | DeductionAssumptionWarning {var :: Var, assumption :: Formula}
+             | AxiomSchemeUseWarning {axiomSchemeId :: Int, var :: Var, formula :: Formula}
+             | InferenceRuleUseWarning {ruleId :: Int, var :: Var, formula :: Formula}
+             | DSFormulaNotProvedError
+instance Show Warning where
+    show (ReplacementWarning replacement target formula) = "Variable " ++ (show target) ++ " isn't free for replacement by term " ++ (show replacement) ++ " in formula " ++ (show formula)
+    show (DeductionAssumptionWarning var assumption) = "Variable " ++ (show var) ++ " is free in formula " ++ (show assumption)
+    show (AxiomSchemeUseWarning axiomSchemeId var formula) = "Use of axiom scheme #" ++ (show axiomSchemeId) ++ " with quantor by var " ++ (show var) ++ ", that is free inside " ++ (show formula)
+    show (InferenceRuleUseWarning ruleId var formula) = "Use of inference rule #" ++ (show ruleId) ++ " with quantor by var " ++ (show var) ++ ", that is free inside " ++ (show formula)
+    show (DSFormulaNotProvedError) = "Target formula wasn't proved"
+data Error = UndefinedError | ParseError String
+             | UndefinedValidateError Int
+             | ValidateError Int [Warning]
+             | DSValidateError [Warning]
 instance Show Error where
-    show (NumberedVError n msg) = "Validate error on line #" ++ (show n) ++ ": " ++ msg
-    show (VError msg) = "Validate error: " ++ msg
-    show (ParseError msg) = "Parse error: " ++ msg
-    show (NullError) = "Unknown error occured"
+    show (UndefinedError) = "Unknown error occured"
+    show (ParseError err) = "Parsing error occured: " ++ err
+    show (UndefinedValidateError ln) = "Unknown validate error occured on line " ++ (show $ ln)
+    show (ValidateError ln ws) = "Validate error on line " ++ (show $ ln + 1) ++ ", warnings: " ++ (show ws)
+    show (DSValidateError ws) = "Deduction statement validate error, warnings: " ++ (show ws)

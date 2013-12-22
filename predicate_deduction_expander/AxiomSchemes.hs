@@ -1,6 +1,8 @@
-module AxiomSchemes(testAxiomScheme, isAxiom) where
+module AxiomSchemes(testAxiomScheme, isAxiom, getAxiomId, getAxiomId') where
 import DataDefinitions
+import "mtl" Control.Monad.Writer
 import FormulaReplace
+import Data.Maybe
 
 testAxiomScheme1 :: Formula -> Bool
 testAxiomScheme1 (Impl a (Impl b c)) = a==c
@@ -45,23 +47,38 @@ testAxiomScheme10 :: Formula -> Bool
 testAxiomScheme10 (Impl (Not (Not a)) _a) = a == _a
 testAxiomScheme10 _ = False
 
-testAxiomScheme11 :: Formula -> Bool
+testAxiomScheme11 :: Formula -> Writer [Warning] Bool
 testAxiomScheme11 (Impl (ForAll x f1) f2) = checkReplEq f1 f2 x
-testAxiomScheme11 _ = False
+testAxiomScheme11 _ = return False
 
-testAxiomScheme12 :: Formula -> Bool
+testAxiomScheme12 :: Formula -> Writer [Warning] Bool
 testAxiomScheme12 (Impl f2 (Exists x f1)) = checkReplEq f1 f2 x
-testAxiomScheme12 _ = False
+testAxiomScheme12 _ = return False
 
-axiomSchemeList = [testAxiomScheme1, testAxiomScheme2, testAxiomScheme3,
-                   testAxiomScheme4, testAxiomScheme5, testAxiomScheme6,
-                   testAxiomScheme7, testAxiomScheme8, testAxiomScheme9,
-                   testAxiomScheme10, testAxiomScheme11, testAxiomScheme12]
+simpleAxiomSchemeList = [testAxiomScheme1, testAxiomScheme2, testAxiomScheme3,
+                         testAxiomScheme4, testAxiomScheme5, testAxiomScheme6,
+                         testAxiomScheme7, testAxiomScheme8, testAxiomScheme9,
+                         testAxiomScheme10]
+warningAxiomSchemeList = [testAxiomScheme11, testAxiomScheme12]
 
-testAxiomScheme :: Int -> Formula -> Bool
+axiomSchemeList = (map (return .) simpleAxiomSchemeList) ++ warningAxiomSchemeList
+
+testAxiomScheme :: Int -> Formula -> Writer [Warning] Bool
 testAxiomScheme = (axiomSchemeList !!) . ((-) 1)
 
-isAxiom :: Formula -> Maybe Int
-isAxiom = isAxiomImpl 1 axiomSchemeList
-    where isAxiomImpl _ [] _ = Nothing
-          isAxiomImpl n (test:rest) f = if test f then Just n else isAxiomImpl (n+1) rest f
+getAxiomId :: Formula -> Maybe Int
+getAxiomId f = let (result, ws) = runWriter $ getAxiomId' f
+               in result
+
+getAxiomId' :: Formula -> Writer [Warning] (Maybe Int)
+getAxiomId' f = impl 1 axiomSchemeList f
+    where impl :: Int -> [Formula -> Writer [Warning] Bool] -> Formula -> Writer [Warning] (Maybe Int)
+          impl _ [] _ = return Nothing
+          impl n (test:rest) f = do
+                isOK <- test f
+                if isOK
+                    then return $ Just n
+                    else impl (n+1) rest f
+
+isAxiom :: Formula -> Bool
+isAxiom = isJust . getAxiomId
