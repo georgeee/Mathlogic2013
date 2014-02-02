@@ -15,7 +15,7 @@ them)
 This code is assumed to be tested in ghci by loading Playground.hs.
 Template Haskell language extensions was actively used, writing the code. All
 usages are in way of implementing some function f :: Int -> Int -> Q Exp, which
-defines <<code generator>>, that can be later being used by calling $(f n m).
+defines "code generator", that can be later being used by calling $(f n m).
 Code generators are used to provide type-correct functions with exact number of
 arguments (like e.g. U primitive: $(u 3 2) generates code for U_3^2)
 
