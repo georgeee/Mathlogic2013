@@ -1,7 +1,10 @@
 module DataTypes where
 
 data Nat = Zero | Succ Nat | Negate Nat
-    deriving (Show, Eq, Ord)
+    deriving (Eq, Ord)
+
+instance Show Nat where
+    show x = "@" ++ (show $ toInteger x)
 
 instance Num Nat where
     (+) a b = fromInteger $ (toInteger a) + (toInteger b) 

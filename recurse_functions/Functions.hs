@@ -56,6 +56,7 @@ nMod = $(s 2 2) (@-) $(u 2 1) ($(s 2 2) (@*) $(u 2 2) ($(s 2 2) nDiv $(u 2 1) $(
 infixl 7 `nMod`
 
 -- diff = S<ifFalse<->, U_2^2, U_1^2, S<-, U_1^2, U_2^2>>
+-- diff(x,y) = |x-y|
 nDiff = $(s 3 2) ($(ifFalse 2) (@-)) $(u 2 2) $(u 2 1) ($(s 2 2) (@-) $(u 2 1) $(u 2 2))
 infixl 6 `nDiff`
 
