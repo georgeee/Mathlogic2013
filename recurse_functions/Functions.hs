@@ -91,8 +91,8 @@ plog = $(m 2) $ $(s 2 3) ($(rfNot 2) nMod) $(u 3 2) $ $(s 2 3) (@^) $(u 3 1) $ $
 
 -- (plog 2 192) works really long
 -- so that I've tried to measure, how will it be using native integer mod and pow implementations
--- so that I've created plog'
-plog' = $(m 2) $ $(s 2 3) ($(rfNot 2) $ evalInteger mod) $(u 3 2) $ $(s 2 3) (evalInteger (^)) $(u 3 1) $ $(s 1 3) n $(u 3 3)
+-- so that I've created plogNative
+plogNative = $(m 2) $ $(s 2 3) ($(rfNot 2) $ evalInteger mod) $(u 3 2) $ $(s 2 3) (evalInteger (^)) $(u 3 1) $ $(s 1 3) n $(u 3 3)
 evalInteger :: (Integer -> Integer -> Integer) -> Nat -> Nat -> Nat
 evalInteger f x y = fromInteger $ f (toInteger x) (toInteger y)
 
