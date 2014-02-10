@@ -67,10 +67,10 @@ instance Show LinedProof where
 unLineProof :: LinedProof -> Proof
 unLineProof (LinedProof ds fs) = Proof ds $ map snd fs
 
-data Warning = ReplacementWarning {replacement :: Term, target :: Var, formula :: Formula}
-             | DeductionAssumptionWarning {var :: Var, assumption :: Formula}
-             | AxiomSchemeUseWarning {axiomSchemeId :: Int, var :: Var, formula :: Formula}
-             | InferenceRuleUseWarning {ruleId :: Int, var :: Var, formula :: Formula}
+data Warning = ReplacementWarning {wReplacement :: Term, wTarget :: Var, wFormula :: Formula}
+             | DeductionAssumptionWarning {wVar :: Var, wAssumption :: Formula}
+             | AxiomSchemeUseWarning {wAxiomSchemeId :: Int, wVar :: Var, wFormula :: Formula}
+             | InferenceRuleUseWarning {wRuleId :: Int, wVar :: Var, wFormula :: Formula}
              | DSFormulaNotProvedError
 instance Show Warning where
     show (ReplacementWarning replacement target formula) = "Variable " ++ (show target) ++ " isn't free for replacement by term " ++ (show replacement) ++ " in formula " ++ (show formula)

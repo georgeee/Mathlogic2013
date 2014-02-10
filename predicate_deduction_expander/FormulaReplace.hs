@@ -1,4 +1,4 @@
-module FormulaReplace(findFree, isFree, isFreeInTerm, vars, varSet, replace, replace', replaceInTerm, checkReplEq,findFirstStructureMatching) where
+module FormulaReplace(findFree, isFree, isFreeInTerm, vars, varSet, replace, replace', replaceInTerm, checkEqualAfterReplacement,findFirstStructureMatching) where
 import DataDefinitions
 import "mtl" Control.Monad.Writer
 import qualified Data.Set as Set
@@ -87,7 +87,7 @@ findFirstStructureMatching f1 f2 var = case (ffsmImpl f1 f2 var) of
       Just res -> res
     where ffsmImpl :: Formula -> Formula -> Var -> Maybe (Maybe Term)
           ffsmImpl (Predicate name1 terms1) (Predicate name2 terms2)
-                    = if(name1 /= name2) then \_ -> Just Nothing else checkTermLists terms1 terms2
+                    = if(name1 /= name2) then const $ Just Nothing else checkTermLists terms1 terms2
           ffsmImpl (Not xF) (Not yF) = ffsmImpl xF yF
           ffsmImpl (And a1 b1) (And a2 b2) = binaryImpl a2 b1 a2 b2
           ffsmImpl (Or a1 b1) (Or a2 b2) = binaryImpl a2 b1 a2 b2
@@ -117,8 +117,8 @@ findFirstStructureMatching f1 f2 var = case (ffsmImpl f1 f2 var) of
                     = if (name1 /= name2) then \_ -> Just Nothing else checkTermLists terms1 terms2 
           checkTerms _ _ = \_ -> Just Nothing 
 
-checkReplEq :: Formula -> Formula -> Var -> Writer [Warning] Bool
-checkReplEq f1 f2 var = case findFirstStructureMatching f1 f2 var of
+checkEqualAfterReplacement :: Formula -> Formula -> Var -> Writer [Warning] Bool
+checkEqualAfterReplacement f1 f2 var = case findFirstStructureMatching f1 f2 var of
                                 Nothing -> return False
                                 Just term -> do
                                     r <- replace' f1 var term

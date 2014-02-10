@@ -48,11 +48,11 @@ testAxiomScheme10 (Impl (Not (Not a)) _a) = a == _a
 testAxiomScheme10 _ = False
 
 testAxiomScheme11 :: Formula -> Writer [Warning] Bool
-testAxiomScheme11 (Impl (ForAll x f1) f2) = checkReplEq f1 f2 x
+testAxiomScheme11 (Impl (ForAll x f1) f2) = checkEqualAfterReplacement f1 f2 x
 testAxiomScheme11 _ = return False
 
 testAxiomScheme12 :: Formula -> Writer [Warning] Bool
-testAxiomScheme12 (Impl f2 (Exists x f1)) = checkReplEq f1 f2 x
+testAxiomScheme12 (Impl f2 (Exists x f1)) = checkEqualAfterReplacement f1 f2 x
 testAxiomScheme12 _ = return False
 
 simpleAxiomSchemeList = [testAxiomScheme1, testAxiomScheme2, testAxiomScheme3,
