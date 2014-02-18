@@ -9,5 +9,7 @@ workspace.xml
 tasks.xml
 .*.swp
 .swp
+.swo
+.*.swo
 PropositionalCalculus/test
 *.vim

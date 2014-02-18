@@ -17,9 +17,11 @@ a2 = 2 @- 9
 a3 = 9 @- 2
 a4 = 5 @* 3
 a5 = 2 @^ 5
-a6 = 17 `nDiv` 4
-a7 = 17 `nMod` 4
+a6 = 17 @/ 4
+a7 = 17 @% 4
 a8 = 2 `nDiff` 5
 a9 = plog 2 48
 
 n5thPrime = nthPrime 5
+
+m1 = $(m 1)

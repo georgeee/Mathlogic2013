@@ -1,18 +1,16 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Functions where
+module NativeFunctions where
 
-import Arithmetics
+import NativeArithmetics
 import Primitives
 import Basics
 import DataTypes
 import Language.Haskell.TH
 
-
 -- '=' = Not<S<ifFalse<->, U_2^2, U_1^2, S<-, U_1^2, U_2^2>>>
 (@=) :: Nat -> Nat -> Nat
 (@=) = $(rfNot 2) ($(s 3 2) ($(ifFalse 2) (@-)) $(u 2 2) $(u 2 1) (@-))
 infixl 1 @=
-
 
 -- diff = S<ifFalse<->, U_2^2, U_1^2, S<-, U_1^2, U_2^2>>
 -- diff(x,y) = |x-y|
@@ -50,8 +48,6 @@ plog = $(m 2) $ $(s 2 3) ($(rfNot 2) (@%)) $(u 3 2) $ $(s 2 3) (@^) $(u 3 1) $ $
 {--- so that I've tried to measure, how will it be using native integer mod and pow implementations-}
 {--- so that I've created plogNative-}
 {-plogNative = $(m 2) $ $(s 2 3) ($(rfNot 2) $ evalInteger mod) $(u 3 2) $ $(s 2 3) (evalInteger (^)) $(u 3 1) $ $(s 1 3) n $(u 3 3)-}
-{-evalInteger :: (Integer -> Integer -> Integer) -> Nat -> Nat -> Nat-}
-{-evalInteger f x y = fromInteger $ f (toInteger x) (toInteger y)-}
 
 
 

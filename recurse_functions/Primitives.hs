@@ -43,8 +43,9 @@ m n = [| \f -> $(m' n [| f |]) |]
 m' 0 f = [| m'' $f |]
 m' n f = [| \xi -> $(m' (n-1) [| $f xi |]) |]
 
+m'' :: (Nat -> Nat) -> Nat
 m'' f = m''' f [0..]
 m''' f (n:l)
-    | (f (fromInteger n :: Nat)) == 0  = n
+    | (f (fromInteger n :: Nat)) == 0  = fromInteger n :: Nat
     | otherwise   = m''' f l
 
