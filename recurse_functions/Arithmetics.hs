@@ -27,6 +27,12 @@ infixl 7 @*
 (@^) = $(r 1) ($(s 1 1) n z) ($(s 2 3) (@*) $(u 3 1) $(u 3 3))
 infixr 8 @^
 
+
+-- '=' = Not<S<ifFalse<->, U_2^2, U_1^2, S<-, U_1^2, U_2^2>>>
+(@=) :: Nat -> Nat -> Nat
+(@=) = $(rfNot 2) ($(s 3 2) ($(ifFalse 2) (@-)) $(u 2 2) $(u 2 1) (@-))
+infixl 1 @=
+
 -- div(x,y) = S<isP<S<Z, U_1^2>,g>, U_1^2, U_2^2, S<P, S<-, U_2^2, U_1^2>>>
 -- g = S<R<S<Z, U_1^2>, g'>, U_1^2, U_2^2, S<N, U_1^2>>
 -- //g works fine, we put it in bigger construction for a bit of performance in

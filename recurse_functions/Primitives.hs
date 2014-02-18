@@ -6,10 +6,10 @@ import DataTypes
 import Data.Function
 
 z :: Nat -> Nat
-z = \_ -> Zero
+z = \_ -> 0
 
 n :: Nat -> Nat
-n = Succ
+n = (+) 1
 
 u :: Int -> Int -> Q Exp
 u n k = u' n k [| Nothing |]

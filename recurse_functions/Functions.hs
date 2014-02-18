@@ -8,11 +8,6 @@ import DataTypes
 import Language.Haskell.TH
 
 
--- '=' = Not<S<ifFalse<->, U_2^2, U_1^2, S<-, U_1^2, U_2^2>>>
-(@=) :: Nat -> Nat -> Nat
-(@=) = $(rfNot 2) ($(s 3 2) ($(ifFalse 2) (@-)) $(u 2 2) $(u 2 1) (@-))
-infixl 1 @=
-
 
 -- diff = S<ifFalse<->, U_2^2, U_1^2, S<-, U_1^2, U_2^2>>
 -- diff(x,y) = |x-y|
