@@ -5,6 +5,7 @@ import Primitives
 import Basics
 import Functions
 import DataTypes
+import Arithmetics
 import Language.Haskell.TH
 
 testPrimes n = putStr $ tp n
