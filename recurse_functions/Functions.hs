@@ -8,7 +8,6 @@ import DataTypes
 import Language.Haskell.TH
 
 
-
 -- diff = S<ifFalse<->, U_2^2, U_1^2, S<-, U_1^2, U_2^2>>
 -- diff(x,y) = |x-y|
 nDiff = $(s 3 2) ($(ifFalse 2) (@-)) $(u 2 2) $(u 2 1) ($(s 2 2) (@-) $(u 2 1) $(u 2 2))
@@ -47,6 +46,7 @@ plog = $(m 2) $ $(s 2 3) ($(rfNot 2) (@%)) $(u 3 2) $ $(s 2 3) (@^) $(u 3 1) $ $
 {-plogNative = $(m 2) $ $(s 2 3) ($(rfNot 2) $ evalInteger mod) $(u 3 2) $ $(s 2 3) (evalInteger (^)) $(u 3 1) $ $(s 1 3) n $(u 3 3)-}
 {-evalInteger :: (Integer -> Integer -> Integer) -> Nat -> Nat -> Nat-}
 {-evalInteger f x y = fromInteger $ f (toInteger x) (toInteger y)-}
+
 
 
 
