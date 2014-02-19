@@ -1,0 +1,4 @@
+@xP(x) |- @yP(y) -> @xP(x)
+@xP(x)
+@xP(x) -> @yP(y) -> @xP(x)
+@yP(y) -> @xP(x)

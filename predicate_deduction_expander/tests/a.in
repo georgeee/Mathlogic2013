@@ -1,0 +1,4 @@
+@x@yP(x,y) |- @yP(y,y)
+@x@yP(x,y)
+@x@yP(x,y)->@yP(y,y)
+@yP(y,y)

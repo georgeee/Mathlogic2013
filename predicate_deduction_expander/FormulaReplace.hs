@@ -1,7 +1,8 @@
-module FormulaReplace(findFree, isFree, isFreeInTerm, vars, varSet, replace, replace', replaceInTerm, checkEqualAfterReplacement,findFirstStructureMatching) where
+module FormulaReplace(findFree, isFree, isFreeInTerm, vars, varSet, replace, replace', replaceInTerm, checkEqualAfterReplacement,findFirstStructureMatching, findAllFree, findAllFreeVarsInFormulaList) where
 import DataDefinitions
 import "mtl" Control.Monad.Writer
-import qualified Data.Set as Set
+import qualified Data.Set as S
+import qualified Data.Map as M
 
 isFree :: Formula -> Var -> Bool
 isFree (Predicate name terms) = \x -> all (isFreeInTerm x) terms
@@ -13,30 +14,47 @@ isFree (Exists v f) = \x -> if v==x then False else isFree f x
 isFree (ForAll v f) = \x -> if v==x then False else isFree f x 
 
 findFree :: Formula -> Maybe Var
-findFree f = findFreeImpl f Set.empty
-    where findFreeImpl (Predicate _ terms) = \set -> let intersection = (foldr1 Set.union $ map varSet terms) Set.\\ set
-                                                 in if Set.null intersection then Nothing else Just $ Set.findMin intersection
+findFree f = findFreeImpl f S.empty
+    where findFreeImpl (Predicate _ terms) = \set -> let intersection = (foldr1 S.union $ map varSet terms) S.\\ set
+                                                 in if S.null intersection then Nothing else Just $ S.findMin intersection
           findFreeImpl (Not f)      = findFreeImpl f
           findFreeImpl (And a b)    = a <|> b
           findFreeImpl (Or a b)     = a <|> b
           findFreeImpl (Impl a b)   = a <|> b
-          findFreeImpl (Exists v f) = \set -> findFreeImpl f (Set.insert v set)
-          findFreeImpl (ForAll v f) = \set -> findFreeImpl f (Set.insert v set)
+          findFreeImpl (Exists v f) = \set -> findFreeImpl f (S.insert v set)
+          findFreeImpl (ForAll v f) = \set -> findFreeImpl f (S.insert v set)
           (<|>) a b set = case findFreeImpl a set of
                               Nothing -> findFreeImpl b set
                               m -> m
+
+findAllFree :: Formula -> [Var]
+findAllFree f = S.toList $ impl f S.empty
+    where impl (Predicate _ terms) = \set -> (foldr1 S.union $ map varSet terms) S.\\ set
+          impl (Not f)      = impl f
+          impl (And a b)    = a <|> b
+          impl (Or a b)     = a <|> b
+          impl (Impl a b)   = a <|> b
+          impl (Exists v f) = \set -> impl f (S.insert v set)
+          impl (ForAll v f) = \set -> impl f (S.insert v set)
+          (<|>) a b set = S.union (impl a set) (impl b set)
           
+findAllFreeVarsInFormulaList :: [Formula] -> DSFreeVarsMap
+findAllFreeVarsInFormulaList fs = impl fs M.empty
+        where impl [] map = map
+              impl (f:fs) map = impl' (findAllFree f) f map
+              impl' [] _ map = map
+              impl' (var:vars) f map = if M.member var map then map else M.insert var f map
 
 isFreeInTerm x (VarTerm v) = v /= x
 isFreeInTerm x (FunctionalTerm _ terms) = all (isFreeInTerm x) terms
 
-varSet :: Term -> Set.Set Var
-varSet term = varsImpl term Set.empty
-    where varsImpl (VarTerm var) = Set.insert var
+varSet :: Term -> S.Set Var
+varSet term = varsImpl term S.empty
+    where varsImpl (VarTerm var) = S.insert var
           varsImpl (FunctionalTerm _ terms) = varsImplTs terms
           varsImplTs [] = id
           varsImplTs (t:ts) = \set -> varsImplTs ts $ varsImpl t set
-vars = Set.toList . varSet
+vars = S.toList . varSet
 
 replace :: Formula -> Var -> Term -> Maybe Formula
 replace f v t = let (result, ws) = runWriter $ replace' f v t
@@ -65,7 +83,7 @@ replaceUnaryImpl constructor f x y
 replaceQuantorImpl :: (Var -> Formula -> Formula) -> Var -> Formula -> Var -> Term -> Writer [Warning] (Maybe Formula)
 replaceQuantorImpl constructor v f x y
         = if (v == x) then return $ Just $ constructor v f
-                      else if (Set.member v (varSet y))
+                      else if (S.member v (varSet y))
                            then do
                                  tell [ReplacementWarning y x (constructor v f)]
                                  return Nothing

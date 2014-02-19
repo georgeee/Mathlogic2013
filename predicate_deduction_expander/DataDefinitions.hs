@@ -1,4 +1,5 @@
 module DataDefinitions where
+import qualified Data.Map as M
 
 data Var = Var String
     deriving (Eq, Ord)
@@ -12,6 +13,8 @@ data Formula = Predicate String [Term]
     |Exists Var Formula
     |ForAll Var Formula
     deriving (Eq, Ord)
+
+type DSFreeVarsMap = M.Map Var Formula
 
 data DeductionStatement = DeductionStatement {
         dsConditions :: [Formula],
@@ -68,23 +71,13 @@ unLineProof :: LinedProof -> Proof
 unLineProof (LinedProof ds fs) = Proof ds $ map snd fs
 
 data Warning = ReplacementWarning {wReplacement :: Term, wTarget :: Var, wFormula :: Formula}
-             | DeductionAssumptionWarning {wVar :: Var, wAssumption :: Formula}
-             | AxiomSchemeUseWarning {wAxiomSchemeId :: Int, wVar :: Var, wFormula :: Formula}
-             | InferenceRuleUseWarning {wRuleId :: Int, wVar :: Var, wFormula :: Formula}
+             | InferenceRuleVarIsFreeWarning {wRuleId :: Int, wVar :: Var, wFormula:: Formula}
+             | AxiomSchemeAssumptionVarWarning {wAxiomSchemeId :: Int, wVar :: Var, wAssumption :: Formula}
+             | InferenceRuleAssumptionVarWarning {wRuleId :: Int, wVar :: Var, wAssumption :: Formula}
              | DSFormulaNotProvedError
-instance Show Warning where
-    show (ReplacementWarning replacement target formula) = "Variable " ++ (show target) ++ " isn't free for replacement by term " ++ (show replacement) ++ " in formula " ++ (show formula)
-    show (DeductionAssumptionWarning var assumption) = "Variable " ++ (show var) ++ " is free in formula " ++ (show assumption)
-    show (AxiomSchemeUseWarning axiomSchemeId var formula) = "Use of axiom scheme #" ++ (show axiomSchemeId) ++ " with quantor by var " ++ (show var) ++ ", that is free inside " ++ (show formula)
-    show (InferenceRuleUseWarning ruleId var formula) = "Use of inference rule #" ++ (show ruleId) ++ " with quantor by var " ++ (show var) ++ ", that is free inside " ++ (show formula)
-    show (DSFormulaNotProvedError) = "Target formula wasn't proved"
+
 data Error = UndefinedError | ParseError String
              | UndefinedValidateError Int
              | ValidateError Int [Warning]
              | DSValidateError [Warning]
-instance Show Error where
-    show (UndefinedError) = "Unknown error occured"
-    show (ParseError err) = "Parsing error occured: " ++ err
-    show (UndefinedValidateError ln) = "Unknown validate error occured on line " ++ (show $ ln)
-    show (ValidateError ln ws) = "Validate error on line " ++ (show $ ln + 1) ++ ", warnings: " ++ (show ws)
-    show (DSValidateError ws) = "Deduction statement validate error, warnings: " ++ (show ws)
+

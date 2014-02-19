@@ -1,0 +1,5 @@
+@y?xA(x,y) |- ?x A(x,x)
+@y?xA(x,y) -> ?x A(x,x)
+@y?xA(x,y)
+?x A(x,x)
+
