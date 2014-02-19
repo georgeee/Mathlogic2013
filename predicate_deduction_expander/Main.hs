@@ -1,4 +1,5 @@
 module Main where
+import ErrorShowInstancesDefault
 import Validator 
 import DataDefinitions
 import Parser 
@@ -14,12 +15,16 @@ readValidateTryExpand str = do
     p <- readValidateProof str
     return $ tryExpandDeduction p
 
-processMain inFile outFile = do
-    content <- readFile inFile
-    writeFile outFile (case readValidateTryExpand content of
+processContent content = case readValidateTryExpand content of
         (Left err) -> show err
-        (Right proof) -> show proof)
+        (Right proof) -> show proof
+
+processMain inFile args = do
+    content <- readFile inFile
+    processMainImpl args content
+        where processMainImpl (outFile:as) content = writeFile outFile $ processContent content
+              processMainImpl [] content = putStrLn $ processContent content
 
 main = do
     args <- getArgs
-    processMain (args !! 0) (args !! 1) 
+    let (inFile:rest) = args in processMain inFile rest 

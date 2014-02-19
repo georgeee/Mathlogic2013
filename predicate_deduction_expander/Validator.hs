@@ -13,10 +13,12 @@ type MPCandidatesMap = M.Map Formula (S.Set Formula)
 type TautologoiesMap = M.Map Formula Int
 type DSConditionsSet = S.Set Formula
 
-data ValidateState = ValidateState { mpCandidates :: MPCandidatesMap, 
+data ValidateState = ValidateState { mpCands :: MPCandidatesMap, 
                                      tautologoies :: TautologoiesMap,
                                      conditions :: DSConditionsSet,
-                                     psize :: Int }
+                                     psize :: Int,
+                                     aFVars :: DSFreeVarsMap
+                                   }
     deriving Show
 pairSwap (a,b) = (b,a)
 extractProof = impl
@@ -26,43 +28,60 @@ extractProof = impl
                              Nothing -> Left $ DSValidateError [DSFormulaNotProvedError] 
                              _ -> Right $ Proof ds $ extractImpl vs
 
-checkIfTautology f vs = return $ case M.lookup f $ tautologoies vs of
-                                Nothing -> False
-                                _ -> True
+checkIfTautology f vs = return $ M.member f $ tautologoies vs
 checkIfDsCondition f vs = return $ S.member f $ conditions vs
-checkIfIsAxiom f = do { r <- getAxiomId' f ; return $ isJust r }
-checkForInferenceRuleImpl a b vs = case M.lookup (Impl a b) $ tautologoies vs of
-                                Nothing -> False
-                                Just i -> i>=0
-checkForInferenceRuleImpl' a b vs x f id = if (checkForInferenceRuleImpl a b vs)
-                                                  then if (not $ isFree f x) then return True
-                                                       else do tell [InferenceRuleUseWarning id x f]
-                                                               return False
-                                                  else return False
+checkIfIsAxiom f vs = do { r <- getAxiomId' (aFVars vs) f ; return $ isJust r }
+
 checkForInferenceRule2 (Impl a (ForAll x b)) vs = checkForInferenceRuleImpl' a b vs x a 2
 checkForInferenceRule2 _ _ = return False
 
 checkForInferenceRule3 (Impl (Exists x a) b) vs = checkForInferenceRuleImpl' a b vs x b 3
 checkForInferenceRule3 _ _ = return False
 
+checkForInferenceRuleImpl' a b vs x f id = do res1 <- check1 a b vs x f id
+                                              res2 <- check2 vs x id
+                                              return $ res1 && res2
+                                           where check1 a b vs x f id = if (tautologiesLookup a b vs)
+                                                                        then if (not $ isFree f x) then error $ (show f) ++ " " ++ (show x) --return True
+                                                                             else do tell [InferenceRuleVarIsFreeWarning id x f]
+                                                                                     return False
+                                                                        else return False
+                                                 check2 vs x id = if M.member x (aFVars vs)
+                                                                  then do tell [InferenceRuleAssumptionVarWarning id x $ (aFVars vs) M.! x]
+                                                                          return False
+                                                                  else return True
+                                                 tautologiesLookup a b vs = case M.lookup (Impl a b) $ tautologoies vs of
+                                                                        Nothing -> False
+                                                                        Just i -> i>=0
+
 addFormula state formula = checkMP (addMP (addToTau state formula) formula) formula
-        where addToTau vs@(ValidateState mpCs taus cs n) f = case M.lookup f taus of
-                                Nothing -> ValidateState mpCs (M.insert f n taus) cs (n+1)
+        where addToTau vs f = let
+                                taus = tautologoies vs
+                                n = psize vs
+                              in case M.lookup f taus of
+                                Nothing -> vs { tautologoies = (M.insert f n taus), psize = n + 1 }
                                 Just i -> if i>=0
                                             then vs
-                                            else ValidateState mpCs (M.insert f n taus) cs (n+1)
-              addMP vs@(ValidateState mpCs taus cs n) f@(Impl a b) = case M.lookup a taus of
-                                Nothing -> ValidateState (addToMpCs a b mpCs) taus cs n
+                                            else vs { tautologoies = (M.insert f n taus), psize = n + 1 }
+              addMP vs f@(Impl a b) = let
+                                mpCs = mpCands vs
+                                taus = tautologoies vs
+                                n = psize vs
+                            in case M.lookup a taus of
+                                Nothing -> vs { mpCands = addToMpCs a b mpCs }
                                 Just i -> if i>=0
-                                            then ValidateState mpCs (M.insert b (-1) taus) cs n 
-                                            else ValidateState (addToMpCs a b mpCs) taus cs n
+                                            then (if M.member b taus then vs else vs { tautologoies = (M.insert b (-1) taus) })
+                                            else vs { mpCands = addToMpCs a b mpCs }
               addMP vs _ = vs 
               addToMpCs k v mpCs = case M.lookup k mpCs of
                                     Nothing -> M.insert k (S.singleton v) mpCs
                                     Just s -> M.insert k (S.insert v s) mpCs
-              checkMP vs@(ValidateState mpCs taus cs n) f = case M.lookup f mpCs of
+              checkMP vs f = let
+                                mpCs = mpCands vs
+                                taus = tautologoies vs 
+                             in case M.lookup f mpCs of
                                     Nothing -> vs
-                                    Just s -> foldl addToTau (ValidateState (M.delete f mpCs) taus cs n) $ S.toList s
+                                    Just s -> foldl addToTau (vs { mpCands = M.delete f mpCs }) $ S.toList s
 
 validateFormula :: ValidateState -> (Int,Formula) -> Either Error ValidateState
 validateFormula vs (n,f) = let (res, ws) = runWriter $ tryValidators $ map ($vs) $ map ($f) fList
@@ -70,16 +89,11 @@ validateFormula vs (n,f) = let (res, ws) = runWriter $ tryValidators $ map ($vs)
                               then Right $ addFormula vs f
                               else Left $ ValidateError n ws
                                where fList = [checkIfDsCondition, checkIfTautology, checkForInferenceRule2,
-                                              checkForInferenceRule3, flip $ const checkIfIsAxiom]
+                                              checkForInferenceRule3, checkIfIsAxiom]
                                      tryValidators [] = return False
                                      tryValidators (w:ws) = do res <- w
                                                                if res then return True
                                                                else tryValidators ws
-
-validateDS (DeductionStatement fs f) = foldM (const validateDSImpl) () fs
-    where validateDSImpl f = case findFree f of
-                                 Just var -> Left $ DSValidateError $ [DeductionAssumptionWarning var f]
-                                 Nothing -> Right $ () 
 
 validateProof :: LinedProof -> Either Error Proof
 validateProof lp = case validateImpl lp of
@@ -87,11 +101,10 @@ validateProof lp = case validateImpl lp of
                         (Right validateState) -> extractProof lp validateState 
                    where
                         dsCondSet = S.fromList . dsConditions
-                        initVaidateState ds = ValidateState M.empty M.empty (dsCondSet ds) 0
+                        initValidateState ds = ValidateState M.empty M.empty (dsCondSet ds) 0 (findAllFreeVarsInFormulaList $ dsConditions ds)
                         validateImpl :: LinedProof -> Either Error ValidateState
                         validateImpl (LinedProof ds fs) = do
-                            validateDS ds
-                            res <- foldM validateFormula (initVaidateState ds) fs 
+                            res <- foldM validateFormula (initValidateState ds) fs 
                             return res
                          
 

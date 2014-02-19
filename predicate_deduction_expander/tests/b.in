@@ -1,0 +1,6 @@
+@xP(x) |- ?y P(y)
+@xP(x) -> P(y)
+@xP(x)
+P(y)
+P(y)->?yP(y)
+?yP(y)

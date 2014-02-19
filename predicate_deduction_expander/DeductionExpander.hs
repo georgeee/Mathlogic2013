@@ -25,7 +25,9 @@ data ExpandStateData = ExpandStateData {permConds :: PermanentConds,
 type ExpandState = State ExpandStateData
 
 composeResult state = Proof (pcDS $ permConds state) $ toFList state
-    where toFList state = map snd $ sort $ map swap $ M.toList $ fMap state 
+    where toFList state = let map' = fMap state
+                              statement = dsFormula $ pcDS $ permConds state
+                          in map snd $ sort $ map swap $ M.toList $ M.filter (<= (map' M.! statement)) map'
           swap (a,b) = (b,a)
 
 createState (Proof (DeductionStatement conds f) fs)
@@ -37,7 +39,9 @@ createState (Proof (DeductionStatement conds f) fs)
         in  ExpandStateData pc M.empty M.empty M.empty S.empty
 
 addFormula f = do state <- get
-                  put $ state {fMap = M.insert f (M.size $ fMap state) $ fMap state}
+                  let map' = fMap state
+                      in if M.member f map' then return ()
+                                            else put $ state {fMap = M.insert f (M.size map') map'}
 getExpandee :: ExpandState Formula
 getExpandee = do state <- get
                  return $ expandee $ permConds state
@@ -77,7 +81,7 @@ addFormulaProof ci = do a <- getExpandee
                         if a == ci then addSelfProof
                         else do
                            isCond <- isDSCondition ci
-                           if isCond || (isAxiom ci)
+                           if isCond || (isAxiom M.empty ci)
                            then addDSConditionProof ci
                            else do
                               mpPred <- getMPPred ci
@@ -89,7 +93,7 @@ addFormulaProof ci = do a <- getExpandee
                                         else do
                                             isIR3 <- isIR3Conclusion ci
                                             if isIR3 then addIR3Proof ci
-                                            else error "Input proof is invalid"
+                                            else error "Input proof is invalid" --it shouldn't happen, cause proof is being validated before deduction expand process
                         processMPHandling ci
                         state <- get
                         put state{origTautologies = S.insert ci $ origTautologies state}
