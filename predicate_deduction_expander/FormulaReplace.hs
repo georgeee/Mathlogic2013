@@ -4,12 +4,14 @@ import "mtl" Control.Monad.Writer
 import qualified Data.Set as S
 import qualified Data.Map as M
 
+(<~>) a b = \x -> (isFree a x) || (isFree b x)
+
 isFree :: Formula -> Var -> Bool
-isFree (Predicate name terms) = \x -> all (isFreeInTerm x) terms
+isFree (Predicate name terms) = \x -> any (isFreeInTerm x) terms
 isFree (Not f)      = isFree f
-isFree (And a b)    = \x -> (isFree a x) && (isFree b x)
-isFree (Or a b)     = \x -> (isFree a x) && (isFree b x)
-isFree (Impl a b)   = \x -> (isFree a x) && (isFree b x)
+isFree (And a b)    = a <~> b
+isFree (Or a b)     = a <~> b
+isFree (Impl a b)   = a <~> b
 isFree (Exists v f) = \x -> if v==x then False else isFree f x 
 isFree (ForAll v f) = \x -> if v==x then False else isFree f x 
 
@@ -45,8 +47,8 @@ findAllFreeVarsInFormulaList fs = impl fs M.empty
               impl' [] _ map = map
               impl' (var:vars) f map = if M.member var map then map else M.insert var f map
 
-isFreeInTerm x (VarTerm v) = v /= x
-isFreeInTerm x (FunctionalTerm _ terms) = all (isFreeInTerm x) terms
+isFreeInTerm x (VarTerm v) = v == x
+isFreeInTerm x (FunctionalTerm _ terms) = any (isFreeInTerm x) terms
 
 varSet :: Term -> S.Set Var
 varSet term = varsImpl term S.empty

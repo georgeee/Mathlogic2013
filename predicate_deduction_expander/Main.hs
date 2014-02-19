@@ -1,5 +1,5 @@
 module Main where
-import ErrorShowInstancesRussian
+import ErrorShowInstancesDefault
 import Validator 
 import DataDefinitions
 import Parser 

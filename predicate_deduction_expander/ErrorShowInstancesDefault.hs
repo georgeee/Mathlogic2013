@@ -3,10 +3,14 @@ module ErrorShowInstancesDefault where
 import DataDefinitions
 
 instance Show Warning where
-    show (ReplacementWarning replacement target formula) = "Variable " ++ (show target) ++ " isn't free for replacement by term " ++ (show replacement) ++ " in formula " ++ (show formula)
-    show (DeductionAssumptionWarning var assumption) = "Variable " ++ (show var) ++ " is free in formula " ++ (show assumption)
-    show (AxiomSchemeUseWarning axiomSchemeId var formula) = "Use of axiom scheme #" ++ (show axiomSchemeId) ++ " with quantor by var " ++ (show var) ++ ", that is free inside " ++ (show formula)
-    show (InferenceRuleUseWarning ruleId var formula) = "Use of inference rule #" ++ (show ruleId) ++ " with quantor by var " ++ (show var) ++ ", that is free inside " ++ (show formula)
+    show (ReplacementWarning replacement target formula) = "term " ++ (show replacement) ++ " isn't free to replace variable " ++ (show target) ++ " in formula " ++ (show formula)
+    show (InferenceRuleVarIsFreeWarning ruleId var formula) = "variable " ++ (show var) ++ " is free in formula " ++ (show formula) ++ " in usage of rule #" ++ (show ruleId)
+    show (AxiomSchemeAssumptionVarWarning axiomSchemeId var assumption) = "usage of axiom scheme #" ++ (show axiomSchemeId)
+                                                                          ++ "with quantor by variable " ++ (show var)
+                                                                          ++ ", that is free inside assumption " ++ (show assumption)
+    show (InferenceRuleAssumptionVarWarning ruleId var assumption) = "usage of inference rule #" ++ (show ruleId)
+                                                                          ++ "with quantor by variable " ++ (show var)
+                                                                          ++ ", that is free inside assumption " ++ (show assumption)
     show (DSFormulaNotProvedError) = "Target formula wasn't proved"
 instance Show Error where
     show (UndefinedError) = "Unknown error occured"

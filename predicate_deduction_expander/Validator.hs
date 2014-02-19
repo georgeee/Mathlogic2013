@@ -28,9 +28,7 @@ extractProof = impl
                              Nothing -> Left $ DSValidateError [DSFormulaNotProvedError] 
                              _ -> Right $ Proof ds $ extractImpl vs
 
-checkIfTautology f vs = return $ case M.lookup f $ tautologoies vs of
-                                Nothing -> False
-                                _ -> True
+checkIfTautology f vs = return $ M.member f $ tautologoies vs
 checkIfDsCondition f vs = return $ S.member f $ conditions vs
 checkIfIsAxiom f vs = do { r <- getAxiomId' (aFVars vs) f ; return $ isJust r }
 
@@ -44,7 +42,7 @@ checkForInferenceRuleImpl' a b vs x f id = do res1 <- check1 a b vs x f id
                                               res2 <- check2 vs x id
                                               return $ res1 && res2
                                            where check1 a b vs x f id = if (tautologiesLookup a b vs)
-                                                                        then if (not $ isFree f x) then return True
+                                                                        then if (not $ isFree f x) then error $ (show f) ++ " " ++ (show x) --return True
                                                                              else do tell [InferenceRuleVarIsFreeWarning id x f]
                                                                                      return False
                                                                         else return False
@@ -72,7 +70,7 @@ addFormula state formula = checkMP (addMP (addToTau state formula) formula) form
                             in case M.lookup a taus of
                                 Nothing -> vs { mpCands = addToMpCs a b mpCs }
                                 Just i -> if i>=0
-                                            then vs { tautologoies = (M.insert b (-1) taus) }
+                                            then (if M.member b taus then vs else vs { tautologoies = (M.insert b (-1) taus) })
                                             else vs { mpCands = addToMpCs a b mpCs }
               addMP vs _ = vs 
               addToMpCs k v mpCs = case M.lookup k mpCs of
