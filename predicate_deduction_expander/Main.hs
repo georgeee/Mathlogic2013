@@ -6,6 +6,17 @@ import Parser
 import DeductionExpander
 import System.Environment
 
+data MainConfig = MainConfig { inFile :: String,
+                               outFile :: String,
+                               checkOnly :: Bool }
+
+createConfig :: [String] -> MainConfig
+createConfig = impl $ MainConfig "" "" False
+               where impl conf [] = conf
+                     impl conf ("-c":rest) = impl conf{checkOnly=True} rest
+                     impl conf (inF:outF:rest) = impl conf{inFile=inF, outFile=outF} rest
+                     impl conf (inF:rest) = impl conf{inFile=inF} rest
+
 readValidateProof str = do
     lp <- readProof str
     p <- validateProof lp
@@ -15,16 +26,26 @@ readValidateTryExpand str = do
     p <- readValidateProof str
     return $ tryExpandDeduction p
 
-processContent content = case readValidateTryExpand content of
+processContent config content = case readValidateTryExpand content of
         (Left err) -> show err
-        (Right proof) -> show proof
+        (Right proof) -> if (checkOnly config)
+                         then "Доказательство корректно."
+                         else show proof
 
-processMain inFile args = do
-    content <- readFile inFile
-    processMainImpl args content
-        where processMainImpl (outFile:as) content = writeFile outFile $ processContent content
-              processMainImpl [] content = putStrLn $ processContent content
+processMain' config = do
+    content <- readFile $ inFile config
+    let  ls = lines content
+         content' = if checkOnly config
+                    then "|-" ++ (last ls) ++ "\n" ++ content
+                    else content
+         outF = outFile config
+         res = processContent config content'
+     in  case outF of
+           [] -> putStrLn res
+           outF -> writeFile outF $ res
+
+processMain = processMain' . createConfig
 
 main = do
     args <- getArgs
-    let (inFile:rest) = args in processMain inFile rest 
+    processMain args 

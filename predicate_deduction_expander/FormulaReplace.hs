@@ -109,9 +109,9 @@ findFirstStructureMatching f1 f2 var = case (ffsmImpl f1 f2 var) of
           ffsmImpl (Predicate name1 terms1) (Predicate name2 terms2)
                     = if(name1 /= name2) then const $ Just Nothing else checkTermLists terms1 terms2
           ffsmImpl (Not xF) (Not yF) = ffsmImpl xF yF
-          ffsmImpl (And a1 b1) (And a2 b2) = binaryImpl a2 b1 a2 b2
-          ffsmImpl (Or a1 b1) (Or a2 b2) = binaryImpl a2 b1 a2 b2
-          ffsmImpl (Impl a1 b1) (Impl a2 b2) = binaryImpl a2 b1 a2 b2
+          ffsmImpl (And a1 b1) (And a2 b2) = binaryImpl a1 b1 a2 b2
+          ffsmImpl (Or a1 b1) (Or a2 b2) = binaryImpl a1 b1 a2 b2
+          ffsmImpl (Impl a1 b1) (Impl a2 b2) = binaryImpl a1 b1 a2 b2
           ffsmImpl (ForAll x xF) (ForAll y yF) = quantorImpl x y xF yF
           ffsmImpl (Exists x xF) (Exists y yF) = quantorImpl x y xF yF
           ffsmImpl _ _ = \_ -> Just Nothing

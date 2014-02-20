@@ -4,7 +4,6 @@ import "mtl" Control.Monad.Writer
 import qualified Data.Map as M
 import FormulaReplace
 import Data.Maybe
-import Parser
 
 a = VarTerm $ Var "a"
 b = VarTerm $ Var "b"
