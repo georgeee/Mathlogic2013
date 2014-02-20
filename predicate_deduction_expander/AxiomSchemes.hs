@@ -1,9 +1,10 @@
-module AxiomSchemes(isAxiom, getAxiomId, getAxiomId') where
+module AxiomSchemes(isAxiom, getAxiomId, getAxiomId', checkNotInVars) where
 import DataDefinitions
 import "mtl" Control.Monad.Writer
 import qualified Data.Map as M
 import FormulaReplace
 import Data.Maybe
+import ArithmeticAxioms
 
 testAxiomScheme1 :: Formula -> Bool
 testAxiomScheme1 (Impl a (Impl b c)) = a==c
@@ -49,19 +50,15 @@ testAxiomScheme10 (Impl (Not (Not a)) _a) = a == _a
 testAxiomScheme10 _ = False
 
 testWarningAxiomScheme f1 f2 x vars id = do res <- checkEqualAfterReplacement f1 f2 x
-                                            res2 <- checkNotInVars x vars
+                                            res2 <- checkNotInVars x vars id
                                             return $ res && res2
-                                        where checkNotInVars x vars = if M.member x vars
-                                                                      then do tell [AxiomSchemeAssumptionVarWarning id x $ vars M.! x]
-                                                                              return False
-                                                                      else return True
 
 testAxiomScheme11 :: DSFreeVarsMap -> Formula -> Writer [Warning] Bool
-testAxiomScheme11 vars (Impl (ForAll x f1) f2) = testWarningAxiomScheme f1 f2 x vars 11
+testAxiomScheme11 vars (Impl (ForAll x f1) f2) = testWarningAxiomScheme f1 f2 x vars "11"
 testAxiomScheme11 _ _ = return False
 
 testAxiomScheme12 :: DSFreeVarsMap -> Formula -> Writer [Warning] Bool
-testAxiomScheme12 vars (Impl f2 (Exists x f1)) = testWarningAxiomScheme f1 f2 x vars 12
+testAxiomScheme12 vars (Impl f2 (Exists x f1)) = testWarningAxiomScheme f1 f2 x vars "12"
 testAxiomScheme12 _ _ = return False
 
 simpleAxiomSchemeList = [testAxiomScheme1, testAxiomScheme2, testAxiomScheme3,
@@ -70,7 +67,7 @@ simpleAxiomSchemeList = [testAxiomScheme1, testAxiomScheme2, testAxiomScheme3,
                          testAxiomScheme10]
 warningAxiomSchemeList = [testAxiomScheme11, testAxiomScheme12]
 
-axiomSchemeList = (map transformer simpleAxiomSchemeList) ++ warningAxiomSchemeList
+axiomSchemeList = (map transformer simpleAxiomSchemeList) ++ warningAxiomSchemeList ++ arithmeticAxiomList
     where transformer :: (Formula -> Bool) -> (DSFreeVarsMap -> Formula -> Writer [Warning] Bool)
           transformer func = \_ -> \f -> return $ func f
 

@@ -1,4 +1,4 @@
-module FormulaReplace(findFree, isFree, isFreeInTerm, vars, varSet, replace, replace', replaceInTerm, checkEqualAfterReplacement,findFirstStructureMatching, findAllFree, findAllFreeVarsInFormulaList) where
+module FormulaReplace(checkNotInVars, findFree, isFree, isFreeInTerm, vars, varSet, replace, replace', replaceInTerm, checkEqualAfterReplacement,findFirstStructureMatching, findAllFree, findAllFreeVarsInFormulaList) where
 import DataDefinitions
 import "mtl" Control.Monad.Writer
 import qualified Data.Set as S
@@ -146,3 +146,10 @@ checkEqualAfterReplacement f1 f2 var = case findFirstStructureMatching f1 f2 var
              where isJustTrue m = case m of
                                     (Just True) -> True
                                     _ -> False
+
+
+checkNotInVars x vars id = if M.member x vars
+                        then do tell [AxiomSchemeAssumptionVarWarning id x $ vars M.! x]
+                                return False
+                        else return True
+

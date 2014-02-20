@@ -1,4 +1,4 @@
-module Parser(readDeductionStatement, readTerm, readFormula, readProof) where
+module Parser{-(readDeductionStatement, readTerm, readFormula, readProof) -}where
 
 import DataDefinitions
 import Control.Applicative((<*))
@@ -8,6 +8,21 @@ import Text.Parsec.String
 import Text.Parsec.Expr
 import Text.Parsec.Token
 import Text.Parsec.Language
+import Data.Functor.Identity
+
+type SingleBinaryOperatorLevelImpl s u m a = s -> (a -> a -> a) -> Assoc -> [Operator s u m a]
+type SingleBinaryOperatorLevel a = SingleBinaryOperatorLevelImpl String () Identity a
+type SingleUnaryOperatorLevelImpl s u m a = s -> (a -> a) -> [Operator s u m a]
+type SingleUnaryOperatorLevel a = SingleUnaryOperatorLevelImpl String () Identity a
+
+binaryLevel :: SingleBinaryOperatorLevel a
+binaryLevel  = \name fun assoc -> [Infix (string name >> return fun) assoc]
+
+prefixLevel :: SingleUnaryOperatorLevel a
+prefixLevel  = \name fun -> [Prefix  . chainl1 (try(string name >> return fun)) $ return (.)]
+
+postfixLevel :: SingleUnaryOperatorLevel a
+postfixLevel = \name fun -> [Postfix . chainl1 (try(string name >> return fun)) $ return (flip (.))]
 
 nameContents = many (digit <|> char '_')
 parentheses :: Parser a -> Parser a
@@ -44,8 +59,8 @@ termList = do skipSpaces
               return (first:rest)
     <?> "list of terms"
 
-parseTerm :: Parser Term
-parseTerm = do { skipSpaces ; form2 <|> (try form3) <|> form1 } <?> "term"
+parseTerm' :: Parser Term
+parseTerm' = do { skipSpaces ; form2 <|> (try form3) <|> form1 <|> form4} <?> "term"
         where
             form1 = do var <- parseVar
                        return (VarTerm var)
@@ -53,6 +68,14 @@ parseTerm = do { skipSpaces ; form2 <|> (try form3) <|> form1 } <?> "term"
             form3 = do name <- termName
                        subterms <- termList
                        return (FunctionalTerm name subterms)
+            form4 = do char '0'
+                       return (FunctionalTerm "0" [])
+
+parseTerm = buildExpressionParser table parseTerm'
+         where
+            table = [ postfixLevel "'" (\x -> FunctionalTerm "'" [x]),
+                      binaryLevel "*" (\x -> \y -> FunctionalTerm "*" [x,y]) AssocLeft,
+                      binaryLevel "+" (\x -> \y -> FunctionalTerm "+" [x,y]) AssocLeft ]
 
 testParseTerm str = parse parseTerm "" str 
 
@@ -66,6 +89,7 @@ predicateName = do skipSpaces
 parseAtomicFormula :: Parser Formula
 parseAtomicFormula = do skipSpaces
                         parseResult <- (try (parentheses parseFormula))
+                                       <|> (try parseEqualsPredicate)
                                        <|> (try parsePredicate)
                                        <|> parseEmptyPredicate
                                        <|> parseExists
@@ -81,6 +105,13 @@ parseAtomicFormula = do skipSpaces
                 name <- predicateName
                 terms <- termList
                 return (Predicate name terms)
+            parseEqualsPredicate = do
+                term1 <- parseTerm
+                skipSpaces
+                char '='
+                skipSpaces
+                term2 <- parseTerm
+                return (Predicate "=" [term1, term2])
             parseExists = parseWithQuantor '?' Exists
             parseForAll = parseWithQuantor '@' ForAll
             parseWithQuantor ch constructor = do
@@ -89,12 +120,11 @@ parseAtomicFormula = do skipSpaces
                 formula <- parseAtomicFormula
                 return (constructor var formula)
 
+
 parseFormula = buildExpressionParser table parseAtomicFormula
          where
-            table = [ [prefix "!" Not], [binary "&" And AssocLeft],
-                      [binary "|" Or AssocLeft], [binary "->" Impl AssocRight] ]
-            binary name fun assoc = Infix (string name >> return fun) assoc
-            prefix name fun       = Prefix (string name >> return fun)
+            table = [ prefixLevel "!" Not, binaryLevel "&" And AssocLeft,
+                      binaryLevel "|" Or AssocLeft, binaryLevel "->" Impl AssocRight ]
 
 testParseFormula str = parse parseFormula "" str
 

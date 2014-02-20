@@ -33,7 +33,16 @@ infixl 2 -|-
 infixr 1 ->-
 
 (-&-) f1 f2 = And f1 f2
-infixl 3 -&- 
+infixl 3 -&-
+
+(-=-) t1 t2 = Predicate "=" [t1, t2]
+infixl 4 -=-
+
+(-+-) t1 t2 = FunctionalTerm "+" [t1, t2]
+infixl 6 -+-
+
+(-*-) t1 t2 = FunctionalTerm "*" [t1, t2]
+infixl 7 -*-
 
 instance Show Var where
     show (Var s) = s
@@ -47,8 +56,13 @@ print_subterms name subterms = name ++ "(" ++ (psubs subterms) ++ ")"
 
 instance Show Term where
     show (VarTerm var) = show var
+    show (FunctionalTerm "0" []) = "0"
+    show (FunctionalTerm "'" (a:[])) = (show a) ++ "'"
+    show (FunctionalTerm "*" (a:b:[])) = (show a) ++ " * " ++ (show b)
+    show (FunctionalTerm "+" (a:b:[])) = (show a) ++ " + " ++ (show b)
     show (FunctionalTerm name subterms) = print_subterms name subterms
 instance Show Formula where
+    show (Predicate "=" (a:b:[])) = (show a) ++ " = " ++ (show b)
     show (Predicate name subterms) = print_subterms name subterms
     show (Not unary) = "(!" ++ (show unary) ++ ")"
     show (ForAll var unary) = "(@"++(show var)++" "++(show unary) ++ ")"
@@ -72,7 +86,7 @@ unLineProof (LinedProof ds fs) = Proof ds $ map snd fs
 
 data Warning = ReplacementWarning {wReplacement :: Term, wTarget :: Var, wFormula :: Formula}
              | InferenceRuleVarIsFreeWarning {wRuleId :: Int, wVar :: Var, wFormula:: Formula}
-             | AxiomSchemeAssumptionVarWarning {wAxiomSchemeId :: Int, wVar :: Var, wAssumption :: Formula}
+             | AxiomSchemeAssumptionVarWarning {wAxiomSchemeId :: String, wVar :: Var, wAssumption :: Formula}
              | InferenceRuleAssumptionVarWarning {wRuleId :: Int, wVar :: Var, wAssumption :: Formula}
              | DSFormulaNotProvedError
 
@@ -80,4 +94,5 @@ data Error = UndefinedError | ParseError String
              | UndefinedValidateError Int
              | ValidateError Int [Warning]
              | DSValidateError [Warning]
+
 

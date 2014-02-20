@@ -42,7 +42,7 @@ checkForInferenceRuleImpl' a b vs x f id = do res1 <- check1 a b vs x f id
                                               res2 <- check2 vs x id
                                               return $ res1 && res2
                                            where check1 a b vs x f id = if (tautologiesLookup a b vs)
-                                                                        then if (not $ isFree f x) then error $ (show f) ++ " " ++ (show x) --return True
+                                                                        then if (not $ isFree f x) then return True
                                                                              else do tell [InferenceRuleVarIsFreeWarning id x f]
                                                                                      return False
                                                                         else return False

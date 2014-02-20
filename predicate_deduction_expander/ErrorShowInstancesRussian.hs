@@ -5,7 +5,7 @@ import DataDefinitions
 instance Show Warning where
     show (ReplacementWarning replacement target formula) = "терм " ++ (show replacement) ++ " не свободен для подстановки в формулу " ++ (show formula) ++ " вместо переменной " ++ (show target)
     show (InferenceRuleVarIsFreeWarning ruleId var formula) = "переменная " ++ (show var) ++ " входит свободно в формулу " ++ (show formula) ++ " в применении правила #" ++ (show ruleId)
-    show (AxiomSchemeAssumptionVarWarning axiomSchemeId var assumption) = "используется схема аксиом #" ++ (show axiomSchemeId)
+    show (AxiomSchemeAssumptionVarWarning axiomSchemeId var assumption) = "используется схема аксиом #" ++ (axiomSchemeId)
                                                                           ++ " с квантором по переменной " ++ (show var)
                                                                           ++ ", входящей свободно в допущение " ++ (show assumption)
     show (InferenceRuleAssumptionVarWarning ruleId var assumption) = "используется правило вывода #" ++ (show ruleId)
@@ -19,6 +19,6 @@ instance Show Error where
     show (ValidateError ln ws) = "Вывод некорректен, начиная с формулы #" ++ (show $ ln + 1) ++ (printWarnings ws)
                                     where printWarnings [] = ""
                                           printWarnings (w:ws) = ": " ++ (show w)
-    show (DSValidateError ws) = "Deduction statement validate error, warnings: " ++ (printWarnings ws)
+    show (DSValidateError ws) = "Ошибка в заголовке дедукции" ++ (printWarnings ws)
                                     where printWarnings [] = ""
                                           printWarnings (w:ws) = ": " ++ (show w)
