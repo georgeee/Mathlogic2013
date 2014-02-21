@@ -6,11 +6,14 @@ instance Show Warning where
     show (ReplacementWarning replacement target formula) = "term " ++ (show replacement) ++ " isn't free to replace variable " ++ (show target) ++ " in formula " ++ (show formula)
     show (InferenceRuleVarIsFreeWarning ruleId var formula) = "variable " ++ (show var) ++ " is free in formula " ++ (show formula) ++ " in usage of rule #" ++ (show ruleId)
     show (AxiomSchemeAssumptionVarWarning axiomSchemeId var assumption) = "usage of axiom scheme #" ++ (axiomSchemeId)
-                                                                          ++ "with quantor by variable " ++ (show var)
+                                                                          ++ " with quantor by variable " ++ (show var)
                                                                           ++ ", that is free inside assumption " ++ (show assumption)
     show (InferenceRuleAssumptionVarWarning ruleId var assumption) = "usage of inference rule #" ++ (show ruleId)
-                                                                          ++ "with quantor by variable " ++ (show var)
+                                                                          ++ " with quantor by variable " ++ (show var)
                                                                           ++ ", that is free inside assumption " ++ (show assumption)
+    show (DSAssumptionVarWarning var assumption1 assumption2) = "can't expand deduction at such deepness: var " ++ (show var)
+                                                                          ++ ", that is free inside assumption " ++ (show assumption2)
+                                                                          ++ " is also free inside assumption " ++ (show assumption1)
     show (DSFormulaNotProvedError) = "Target formula wasn't proved"
 instance Show Error where
     show (UndefinedError) = "Unknown error occured"

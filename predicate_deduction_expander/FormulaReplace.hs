@@ -40,12 +40,17 @@ findAllFree f = S.toList $ impl f S.empty
           impl (ForAll v f) = \set -> impl f (S.insert v set)
           (<|>) a b set = S.union (impl a set) (impl b set)
           
-findAllFreeVarsInFormulaList :: [Formula] -> DSFreeVarsMap
+findAllFreeVarsInFormulaList :: [Formula] -> Either Error DSFreeVarsMap
 findAllFreeVarsInFormulaList fs = impl fs M.empty
-        where impl [] map = map
-              impl (f:fs) map = impl' (findAllFree f) f map
-              impl' [] _ map = map
-              impl' (var:vars) f map = if M.member var map then map else M.insert var f map
+        where impl :: [Formula] -> DSFreeVarsMap -> Either Error DSFreeVarsMap
+              impl [] map = return map
+              impl (f:fs) map = do map' <- impl' (findAllFree f) f map
+                                   impl fs map'
+              impl' :: [Var] -> Formula -> DSFreeVarsMap -> Either Error DSFreeVarsMap
+              impl' [] _ map = return map
+              impl' (var:vars) f map = do if M.member var map
+                                          then Left $ DSValidateError [DSAssumptionVarWarning var f (map M.! var)]
+                                          else impl' vars f $ M.insert var f map
 
 isFreeInTerm x (VarTerm v) = v == x
 isFreeInTerm x (FunctionalTerm _ terms) = any (isFreeInTerm x) terms

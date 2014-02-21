@@ -37,7 +37,7 @@ createState (Proof (DeductionStatement conds f) fs)
             dsCondsSet = S.fromList dsConds
             ds = DeductionStatement dsConds (Impl expandee f)
             pc = PermanentConds dsCondsSet expandee ds
-            freeVars = findAllFreeVarsInFormulaList [expandee]
+            freeVars = M.fromList $ map (\t -> (t, expandee)) $ findAllFree expandee
         in  ExpandStateData pc M.empty M.empty M.empty S.empty freeVars
 
 addFormula f = do state <- get

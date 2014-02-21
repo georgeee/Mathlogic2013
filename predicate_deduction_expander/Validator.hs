@@ -106,10 +106,13 @@ validateProof lp expandLevel = case validateImpl lp expandLevel of
                                     (Right validateState) -> extractProof lp validateState 
                    where
                         dsCondSet = S.fromList . dsConditions
-                        initValidateState ds expandLevel = ValidateState M.empty M.empty (dsCondSet ds) 0 (findAllFreeVarsInFormulaList $ take expandLevel $ reverse $ dsConditions ds)
+                        
+                        initValidateState ds expandLevel freeVars = ValidateState M.empty M.empty (dsCondSet ds) 0 freeVars 
+                        
                         validateImpl :: LinedProof -> Int -> Either Error ValidateState
                         validateImpl (LinedProof ds fs) expandLevel = do
-                            res <- foldM validateFormula (initValidateState ds expandLevel) fs 
+                            freeVars <- findAllFreeVarsInFormulaList $ take expandLevel $ reverse $ dsConditions ds
+                            res <- foldM validateFormula (initValidateState ds expandLevel freeVars) fs 
                             return res
                          
 
