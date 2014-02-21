@@ -8,7 +8,7 @@ instance Show Warning where
     show (InferenceRuleAssumptionVarWarning ruleId var assumption) = "используется правило вывода #" ++ (show ruleId)
                                                                           ++ " с квантором по переменной " ++ (show var)
                                                                           ++ ", входящей свободно в допущение " ++ (show assumption)
-    show (DSFormulaNotProvedError) = "Дедуктивное заключение не доказано"
+    show (DSFormulaNotProvedError) = "дедуктивное заключение не доказано"
 instance Show Error where
     show (UndefinedError) = "Неизвестная ошибка"
     show (ParseError err) = "Ошибка парсинга " ++ err
