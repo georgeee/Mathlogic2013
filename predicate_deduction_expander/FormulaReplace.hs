@@ -17,7 +17,7 @@ isFree (ForAll v f) = \x -> if v==x then False else isFree f x
 
 findFree :: Formula -> Maybe Var
 findFree f = findFreeImpl f S.empty
-    where findFreeImpl (Predicate _ terms) = \set -> let intersection = (foldr1 S.union $ map varSet terms) S.\\ set
+    where findFreeImpl (Predicate _ terms) = \set -> let intersection = (foldr S.union S.empty $ map varSet terms) S.\\ set
                                                  in if S.null intersection then Nothing else Just $ S.findMin intersection
           findFreeImpl (Not f)      = findFreeImpl f
           findFreeImpl (And a b)    = a <|> b
@@ -31,7 +31,7 @@ findFree f = findFreeImpl f S.empty
 
 findAllFree :: Formula -> [Var]
 findAllFree f = S.toList $ impl f S.empty
-    where impl (Predicate _ terms) = \set -> (foldr1 S.union $ map varSet terms) S.\\ set
+    where impl (Predicate _ terms) = \set -> (foldr S.union S.empty $ map varSet terms) S.\\ set
           impl (Not f)      = impl f
           impl (And a b)    = a <|> b
           impl (Or a b)     = a <|> b

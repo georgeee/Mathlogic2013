@@ -64,9 +64,9 @@ instance Show Term where
 instance Show Formula where
     show (Predicate "=" (a:b:[])) = (show a) ++ " = " ++ (show b)
     show (Predicate name subterms) = print_subterms name subterms
-    show (Not unary) = "(!" ++ (show unary) ++ ")"
-    show (ForAll var unary) = "(@"++(show var)++" "++(show unary) ++ ")"
-    show (Exists var unary) = "(?"++(show var)++" "++(show unary) ++ ")"
+    show (Not unary) = "!" ++ (show unary)
+    show (ForAll var unary) = "@"++(show var)++" "++(show unary)
+    show (Exists var unary) = "?"++(show var)++" "++(show unary)
     show (Impl a b) = "(" ++ (show a) ++ " -> " ++ (show b) ++ ")"
     show (And a b) = "(" ++ (show a) ++ " & " ++ (show b) ++ ")"
     show (Or a b) = "(" ++ (show a) ++ " | " ++ (show b) ++ ")"

@@ -58,11 +58,12 @@ addFormula state formula = checkMP (addMP (addToTau state formula) formula) form
         where addToTau vs f = let
                                 taus = tautologoies vs
                                 n = psize vs
+                                vs' = vs { tautologoies = (M.insert f n taus), psize = n + 1 }
                               in case M.lookup f taus of
-                                Nothing -> vs { tautologoies = (M.insert f n taus), psize = n + 1 }
+                                Nothing -> vs'
                                 Just i -> if i>=0
                                             then vs
-                                            else vs { tautologoies = (M.insert f n taus), psize = n + 1 }
+                                            else vs'
               addMP vs f@(Impl a b) = let
                                 mpCs = mpCands vs
                                 taus = tautologoies vs
@@ -70,8 +71,8 @@ addFormula state formula = checkMP (addMP (addToTau state formula) formula) form
                             in case M.lookup a taus of
                                 Nothing -> vs { mpCands = addToMpCs a b mpCs }
                                 Just i -> if i>=0
-                                            then (if M.member b taus then vs else vs { tautologoies = (M.insert b (-1) taus) })
-                                            else vs { mpCands = addToMpCs a b mpCs }
+                                          then (if M.member b taus then vs else vs { tautologoies = (M.insert b (-1) taus) })
+                                          else vs { mpCands = addToMpCs a b mpCs }
               addMP vs _ = vs 
               addToMpCs k v mpCs = case M.lookup k mpCs of
                                     Nothing -> M.insert k (S.singleton v) mpCs
@@ -81,7 +82,11 @@ addFormula state formula = checkMP (addMP (addToTau state formula) formula) form
                                 taus = tautologoies vs 
                              in case M.lookup f mpCs of
                                     Nothing -> vs
-                                    Just s -> foldl addToTau (vs { mpCands = M.delete f mpCs }) $ S.toList s
+                                    Just s -> foldl (\vs f -> let taus = tautologoies vs
+                                                              in if M.member f taus
+                                                                 then vs
+                                                                 else vs{ tautologoies = (M.insert f (-1) taus) })
+                                                    (vs { mpCands = M.delete f mpCs }) $ S.toList s
 
 validateFormula :: ValidateState -> (Int,Formula) -> Either Error ValidateState
 validateFormula vs (n,f) = let (res, ws) = runWriter $ tryValidators $ map ($vs) $ map ($f) fList
@@ -95,16 +100,16 @@ validateFormula vs (n,f) = let (res, ws) = runWriter $ tryValidators $ map ($vs)
                                                                if res then return True
                                                                else tryValidators ws
 
-validateProof :: LinedProof -> Either Error Proof
-validateProof lp = case validateImpl lp of
-                        (Left err) -> Left err
-                        (Right validateState) -> extractProof lp validateState 
+validateProof :: LinedProof -> Int -> Either Error Proof
+validateProof lp expandLevel = case validateImpl lp expandLevel of
+                                    (Left err) -> Left err
+                                    (Right validateState) -> extractProof lp validateState 
                    where
                         dsCondSet = S.fromList . dsConditions
-                        initValidateState ds = ValidateState M.empty M.empty (dsCondSet ds) 0 (findAllFreeVarsInFormulaList $ dsConditions ds)
-                        validateImpl :: LinedProof -> Either Error ValidateState
-                        validateImpl (LinedProof ds fs) = do
-                            res <- foldM validateFormula (initValidateState ds) fs 
+                        initValidateState ds expandLevel = ValidateState M.empty M.empty (dsCondSet ds) 0 (findAllFreeVarsInFormulaList $ take expandLevel $ reverse $ dsConditions ds)
+                        validateImpl :: LinedProof -> Int -> Either Error ValidateState
+                        validateImpl (LinedProof ds fs) expandLevel = do
+                            res <- foldM validateFormula (initValidateState ds expandLevel) fs 
                             return res
                          
 

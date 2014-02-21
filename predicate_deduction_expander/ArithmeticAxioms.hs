@@ -27,8 +27,8 @@ testArithmeticAxiom9 :: DSFreeVarsMap -> Formula -> Writer [Warning] Bool
 testArithmeticAxiom9 vars (Impl a@(And _ (ForAll var _)) f)
       = do _f0 <- replace' f var c0
            _f' <- replace' f var (n $ VarTerm var)
-           notFree <- checkNotInVars var vars "A9"
-           return $ (not notFree) && (isJust $
+           notFreeInVars <- checkNotInVars var vars "A9"
+           return $ (isFree f var) && (isJust $
                              do f0 <- _f0
                                 f' <- _f'
                                 return $ if a == (f0 -&- ForAll var (f ->- f'))

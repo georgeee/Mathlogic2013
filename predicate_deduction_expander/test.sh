@@ -1,5 +1,12 @@
 #!/bin/bash
-ls tests|grep '\.in$'|sed 's/\.in//' | while read testName; do
-    testName="tests/$testName"
-    ./deduction_expander "$testName.in" "$testName.out"
+find tests|grep '\.in$'|sed 's/\.in//' | while read testName; do
+    inFile="$testName.in"
+    outFile="$testName.out"
+    tmp=`head -1 "$inFile" | grep '|-'`
+    echo "========= $inFile =========="
+    if [ "$tmp" == "" ]; then
+        ./deduction_expander -c "$inFile" "$outFile" 
+    else
+        ./deduction_expander "$inFile" "$outFile"
+    fi
 done

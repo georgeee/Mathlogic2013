@@ -10,19 +10,32 @@ import Text.Parsec.Token
 import Text.Parsec.Language
 import Data.Functor.Identity
 
-type SingleBinaryOperatorLevelImpl s u m a = s -> (a -> a -> a) -> Assoc -> [Operator s u m a]
-type SingleBinaryOperatorLevel a = SingleBinaryOperatorLevelImpl String () Identity a
-type SingleUnaryOperatorLevelImpl s u m a = s -> (a -> a) -> [Operator s u m a]
-type SingleUnaryOperatorLevel a = SingleUnaryOperatorLevelImpl String () Identity a
+type SingleBinarySimpleOpLevelImpl s u m a = s -> (a -> a -> a) -> Assoc -> [Operator s u m a]
+type SingleBinarySimpleOpLevel a = SingleBinarySimpleOpLevelImpl String () Identity a
+type SingleUnarySimpleOpLevelImpl s u m a = s -> (a -> a) -> [Operator s u m a]
+type SingleUnarySimpleOpLevel a = SingleUnarySimpleOpLevelImpl String () Identity a
+type MultiPrefixLevelImpl s u m a = [ParsecT s u m (a -> a)] -> [Operator s u m a]
+type MultiPrefixLevel a = MultiPrefixLevelImpl String () Identity a
 
-binaryLevel :: SingleBinaryOperatorLevel a
-binaryLevel  = \name fun assoc -> [Infix (string name >> return fun) assoc]
+binarySimpleOpLevel :: SingleBinarySimpleOpLevel a
+binarySimpleOpLevel  = \name fun assoc -> [Infix (createSimpleOpParser name fun) assoc]
 
-prefixLevel :: SingleUnaryOperatorLevel a
-prefixLevel  = \name fun -> [Prefix  . chainl1 (try(string name >> return fun)) $ return (.)]
+prefixSimpleOpLevel :: SingleUnarySimpleOpLevel a
+prefixSimpleOpLevel  = \name fun -> [Prefix  . chainl1 (createSimpleOpParser name fun) $ return (.)]
 
-postfixLevel :: SingleUnaryOperatorLevel a
-postfixLevel = \name fun -> [Postfix . chainl1 (try(string name >> return fun)) $ return (flip (.))]
+prefixMultiLevel :: MultiPrefixLevel a
+prefixMultiLevel = \fs -> [Prefix  . chainl1 (choice fs) $ return (.)]
+
+createSimpleOpParser name fun = string name >> skipSpaces >> return fun
+
+createQuantorParser name fun = do string name
+                                  skipSpaces
+                                  var <- parseVar
+                                  return $ fun var
+
+
+postfixSimpleOpLevel :: SingleUnarySimpleOpLevel a
+postfixSimpleOpLevel = \name fun -> [Postfix . chainl1 (string name >> return fun) $ return (flip (.))]
 
 nameContents = many (digit <|> char '_')
 parentheses :: Parser a -> Parser a
@@ -73,9 +86,9 @@ parseTerm' = do { skipSpaces ; form2 <|> (try form3) <|> form1 <|> form4} <?> "t
 
 parseTerm = buildExpressionParser table parseTerm'
          where
-            table = [ postfixLevel "'" (\x -> FunctionalTerm "'" [x]),
-                      binaryLevel "*" (\x -> \y -> FunctionalTerm "*" [x,y]) AssocLeft,
-                      binaryLevel "+" (\x -> \y -> FunctionalTerm "+" [x,y]) AssocLeft ]
+            table = [ postfixSimpleOpLevel "'" (\x -> FunctionalTerm "'" [x]),
+                      binarySimpleOpLevel "*" (\x -> \y -> FunctionalTerm "*" [x,y]) AssocLeft,
+                      binarySimpleOpLevel "+" (\x -> \y -> FunctionalTerm "+" [x,y]) AssocLeft ]
 
 testParseTerm str = parse parseTerm "" str 
 
@@ -92,8 +105,6 @@ parseAtomicFormula = do skipSpaces
                                        <|> (try parseEqualsPredicate)
                                        <|> (try parsePredicate)
                                        <|> parseEmptyPredicate
-                                       <|> parseExists
-                                       <|> parseForAll
                         skipSpaces
                         return parseResult
         <?> "formula"
@@ -112,19 +123,15 @@ parseAtomicFormula = do skipSpaces
                 skipSpaces
                 term2 <- parseTerm
                 return (Predicate "=" [term1, term2])
-            parseExists = parseWithQuantor '?' Exists
-            parseForAll = parseWithQuantor '@' ForAll
-            parseWithQuantor ch constructor = do
-                char ch
-                var <- parseVar
-                formula <- parseAtomicFormula
-                return (constructor var formula)
 
 
-parseFormula = buildExpressionParser table parseAtomicFormula
+parseFormula = do skipSpaces
+                  buildExpressionParser table parseAtomicFormula
          where
-            table = [ prefixLevel "!" Not, binaryLevel "&" And AssocLeft,
-                      binaryLevel "|" Or AssocLeft, binaryLevel "->" Impl AssocRight ]
+            table = [ prefixMultiLevel [createSimpleOpParser "!" Not, createQuantorParser "?" Exists, createQuantorParser "@" ForAll],
+                      binarySimpleOpLevel "&" And AssocLeft,
+                      binarySimpleOpLevel "|" Or AssocLeft, binarySimpleOpLevel "->" Impl AssocRight
+                       ]
 
 testParseFormula str = parse parseFormula "" str
 

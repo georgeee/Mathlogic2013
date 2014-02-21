@@ -1,4 +1,4 @@
-A(x) -> B(x) |- A(x) -> @xB(x)
-A(x) -> B(x)
-A(x) -> @xB(x)
+A(y) -> B(x) |- A(y) -> @xB(x)
+A(y) -> B(x)
+A(y) -> @xB(x)
 

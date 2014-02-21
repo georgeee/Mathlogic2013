@@ -19,7 +19,8 @@ data ExpandStateData = ExpandStateData {permConds :: PermanentConds,
                                         fMap :: FormulaMap,
                                         mpCandidates :: MPCandidatesMap, 
                                         mpConclusions :: MPConclusionsMap,
-                                        origTautologies :: FormulaSet 
+                                        origTautologies :: FormulaSet,
+                                        expandeeFreeVars :: DSFreeVarsMap
                                        }
     deriving Show
 type ExpandState = State ExpandStateData
@@ -36,7 +37,8 @@ createState (Proof (DeductionStatement conds f) fs)
             dsCondsSet = S.fromList dsConds
             ds = DeductionStatement dsConds (Impl expandee f)
             pc = PermanentConds dsCondsSet expandee ds
-        in  ExpandStateData pc M.empty M.empty M.empty S.empty
+            freeVars = findAllFreeVarsInFormulaList [expandee]
+        in  ExpandStateData pc M.empty M.empty M.empty S.empty freeVars
 
 addFormula f = do state <- get
                   let map' = fMap state
@@ -69,19 +71,23 @@ addMPProof ci cj       = do a <- getExpandee
 expandDeduction (Proof (DeductionStatement [] _) _) = Nothing
 expandDeduction proof = let (_, state) = runState (addAllFormulas $ fList proof) $ createState proof
                         in Just $ composeResult state
-tryExpandDeduction proof = case expandDeduction proof of
-                            Nothing -> proof
-                            Just proof' -> proof'
+
+tryExpandDeduction proof expandLevel = if expandLevel >0
+                                       then tryExpandDeduction (case expandDeduction proof of
+                                            Nothing -> proof
+                                            Just proof' -> proof') $ expandLevel - 1
+                                       else proof
 
 addAllFormulas [] = return ()
 addAllFormulas (f:fs) = do addFormulaProof f
                            addAllFormulas fs
 
 addFormulaProof ci = do a <- getExpandee
+                        _state <- get
                         if a == ci then addSelfProof
                         else do
                            isCond <- isDSCondition ci
-                           if isCond || (isAxiom M.empty ci)
+                           if isCond || (isAxiom (expandeeFreeVars _state)  ci)
                            then addDSConditionProof ci
                            else do
                               mpPred <- getMPPred ci
@@ -93,10 +99,10 @@ addFormulaProof ci = do a <- getExpandee
                                         else do
                                             isIR3 <- isIR3Conclusion ci
                                             if isIR3 then addIR3Proof ci
-                                            else error "Input proof is invalid" --it shouldn't happen, cause proof is being validated before deduction expand process
-                        processMPHandling ci
+                                            else error $ "Input proof is invalid, expandee=" ++ (show _state) ++ " " ++ (show a) ++ " ci=" ++ (show ci) --it shouldn't happen, cause proof is being validated before deduction expand process
                         state <- get
                         put state{origTautologies = S.insert ci $ origTautologies state}
+                        processMPHandling ci
                                        
 processMPHandling ci = do state <- get
                           let cands = mpCandidates state
@@ -105,6 +111,7 @@ processMPHandling ci = do state <- get
                                 Nothing -> return ()
                                 Just ciConcls -> put state{mpConclusions = M.union concls ciConcls,
                                                            mpCandidates = M.delete ci cands}
+                          state <- get
                           case ci of
                             (Impl a b) -> if S.member a $ origTautologies state then
                                             let concls = mpConclusions state in

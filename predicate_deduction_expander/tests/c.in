@@ -1,8 +1,8 @@
-Z(x) |- Z(y)
+Z |- Z
 @x@y(C(x))->@y(C(c(a(b,y),b)))
 A(a(b,c),b)->B(a(b,c),b)->A(a(b,c),b)
 ?x(A(a(b,c),b))->(B(a(b,c),b)->A(a(b,c),b))
 A(a(b,c),b)->@x(B(a(b,c),b)->A(a(b,c),b))
 (C(c(a(b,c),b)))->?xC(x)
-Z(y)
+Z
 
