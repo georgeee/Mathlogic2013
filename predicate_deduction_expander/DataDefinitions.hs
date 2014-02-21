@@ -86,9 +86,7 @@ unLineProof (LinedProof ds fs) = Proof ds $ map snd fs
 
 data Warning = ReplacementWarning {wReplacement :: Term, wTarget :: Var, wFormula :: Formula}
              | InferenceRuleVarIsFreeWarning {wRuleId :: Int, wVar :: Var, wFormula:: Formula}
-             | AxiomSchemeAssumptionVarWarning {wAxiomSchemeId :: String, wVar :: Var, wAssumption :: Formula}
              | InferenceRuleAssumptionVarWarning {wRuleId :: Int, wVar :: Var, wAssumption :: Formula}
-             | DSAssumptionVarWarning {wVar :: Var, wAssumption1 :: Formula, wAssumption2 :: Formula}
              | DSFormulaNotProvedError
 
 data Error = UndefinedError | ParseError String

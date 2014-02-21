@@ -111,7 +111,7 @@ validateProof lp expandLevel = case validateImpl lp expandLevel of
                         
                         validateImpl :: LinedProof -> Int -> Either Error ValidateState
                         validateImpl (LinedProof ds fs) expandLevel = do
-                            freeVars <- findAllFreeVarsInFormulaList $ take expandLevel $ reverse $ dsConditions ds
+                            let freeVars = findAllFreeVarsInFormulaList $ take expandLevel $ reverse $ dsConditions ds
                             res <- foldM validateFormula (initValidateState ds expandLevel freeVars) fs 
                             return res
                          

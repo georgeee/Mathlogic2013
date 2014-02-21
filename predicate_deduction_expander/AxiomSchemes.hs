@@ -49,16 +49,15 @@ testAxiomScheme10 :: Formula -> Bool
 testAxiomScheme10 (Impl (Not (Not a)) _a) = a == _a
 testAxiomScheme10 _ = False
 
-testWarningAxiomScheme f1 f2 x vars id = do res <- checkEqualAfterReplacement f1 f2 x
-                                            res2 <- checkNotInVars x vars id
-                                            return $ res && res2
+testWarningAxiomScheme f1 f2 x vars = do res <- checkEqualAfterReplacement f1 f2 x
+                                         return $ res
 
 testAxiomScheme11 :: DSFreeVarsMap -> Formula -> Writer [Warning] Bool
-testAxiomScheme11 vars (Impl (ForAll x f1) f2) = testWarningAxiomScheme f1 f2 x vars "11"
+testAxiomScheme11 vars (Impl (ForAll x f1) f2) = testWarningAxiomScheme f1 f2 x vars
 testAxiomScheme11 _ _ = return False
 
 testAxiomScheme12 :: DSFreeVarsMap -> Formula -> Writer [Warning] Bool
-testAxiomScheme12 vars (Impl f2 (Exists x f1)) = testWarningAxiomScheme f1 f2 x vars "12"
+testAxiomScheme12 vars (Impl f2 (Exists x f1)) = testWarningAxiomScheme f1 f2 x vars
 testAxiomScheme12 _ _ = return False
 
 simpleAxiomSchemeList = [testAxiomScheme1, testAxiomScheme2, testAxiomScheme3,

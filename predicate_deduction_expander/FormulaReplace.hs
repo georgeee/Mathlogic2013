@@ -1,4 +1,4 @@
-module FormulaReplace(checkNotInVars, findFree, isFree, isFreeInTerm, vars, varSet, replace, replace', replaceInTerm, checkEqualAfterReplacement,findFirstStructureMatching, findAllFree, findAllFreeVarsInFormulaList) where
+module FormulaReplace(findFree, isFree, isFreeInTerm, vars, varSet, replace, replace', replaceInTerm, checkEqualAfterReplacement,findFirstStructureMatching, findAllFree, findAllFreeVarsInFormulaList) where
 import DataDefinitions
 import "mtl" Control.Monad.Writer
 import qualified Data.Set as S
@@ -40,17 +40,14 @@ findAllFree f = S.toList $ impl f S.empty
           impl (ForAll v f) = \set -> impl f (S.insert v set)
           (<|>) a b set = S.union (impl a set) (impl b set)
           
-findAllFreeVarsInFormulaList :: [Formula] -> Either Error DSFreeVarsMap
-findAllFreeVarsInFormulaList fs = impl fs M.empty
-        where impl :: [Formula] -> DSFreeVarsMap -> Either Error DSFreeVarsMap
-              impl [] map = return map
-              impl (f:fs) map = do map' <- impl' (findAllFree f) f map
-                                   impl fs map'
-              impl' :: [Var] -> Formula -> DSFreeVarsMap -> Either Error DSFreeVarsMap
-              impl' [] _ map = return map
-              impl' (var:vars) f map = do if M.member var map
-                                          then Left $ DSValidateError [DSAssumptionVarWarning var f (map M.! var)]
-                                          else impl' vars f $ M.insert var f map
+findAllFreeVarsInFormulaList :: [Formula] -> DSFreeVarsMap
+findAllFreeVarsInFormulaList fs = impl (reverse fs) M.empty
+        where impl [] map = map
+              impl (f:fs) map = impl fs $ impl' (findAllFree f) f map
+              impl' [] _ map = map
+              impl' (var:vars) f map = if M.member var map
+                                       then map
+                                       else impl' vars f $ M.insert var f map
 
 isFreeInTerm x (VarTerm v) = v == x
 isFreeInTerm x (FunctionalTerm _ terms) = any (isFreeInTerm x) terms
@@ -151,10 +148,3 @@ checkEqualAfterReplacement f1 f2 var = case findFirstStructureMatching f1 f2 var
              where isJustTrue m = case m of
                                     (Just True) -> True
                                     _ -> False
-
-
-checkNotInVars x vars id = if M.member x vars
-                        then do tell [AxiomSchemeAssumptionVarWarning id x $ vars M.! x]
-                                return False
-                        else return True
-

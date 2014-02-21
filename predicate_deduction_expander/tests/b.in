@@ -1,4 +1,4 @@
-P(t), Q(t), @xP(x) |- ?y P(y)
+P(t), ?tQ(t), @xP(x) |- ?y P(y)
 @xP(x) -> P(y)
 @xP(x)
 P(y)
