@@ -1,4 +1,4 @@
-module ArithmeticAxioms where
+module ArithmeticAxioms(arithmeticAxiomList) where
 import DataDefinitions
 import "mtl" Control.Monad.Writer
 import qualified Data.Map as M

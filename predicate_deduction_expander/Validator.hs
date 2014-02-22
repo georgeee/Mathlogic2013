@@ -1,4 +1,4 @@
-module Validator where
+module Validator(validateProof) where
 import DataDefinitions
 import FormulaReplace
 import AxiomSchemes
