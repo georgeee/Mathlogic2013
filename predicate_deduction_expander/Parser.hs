@@ -26,16 +26,17 @@ prefixSimpleOpLevel  = \name fun -> [Prefix  . chainl1 (createSimpleOpParser nam
 prefixMultiLevel :: MultiPrefixLevel a
 prefixMultiLevel = \fs -> [Prefix  . chainl1 (choice fs) $ return (.)]
 
-createSimpleOpParser name fun = string name >> skipSpaces >> return fun
+postfixSimpleOpLevel :: SingleUnarySimpleOpLevel a
+postfixSimpleOpLevel = \name fun -> [Postfix . chainl1 (createSimpleOpParser name fun) $ return (flip (.))]
 
-createQuantorParser name fun = do string name
+createSimpleOpParser name fun = skipSpaces >> string name >> skipSpaces >> return fun
+
+createQuantorParser name fun = do skipSpaces
+                                  string name
                                   skipSpaces
                                   var <- parseVar
+                                  skipSpaces
                                   return $ fun var
-
-
-postfixSimpleOpLevel :: SingleUnarySimpleOpLevel a
-postfixSimpleOpLevel = \name fun -> [Postfix . chainl1 (string name >> return fun) $ return (flip (.))]
 
 nameContents = many (digit <|> char '_')
 parentheses :: Parser a -> Parser a
@@ -73,7 +74,11 @@ termList = do skipSpaces
     <?> "list of terms"
 
 parseTerm' :: Parser Term
-parseTerm' = do { skipSpaces ; form2 <|> (try form3) <|> form1 <|> form4} <?> "term"
+parseTerm' = do skipSpaces
+                res <- form2 <|> (try form3) <|> form1 <|> form4
+                skipSpaces
+                return res
+         <?> "term"
         where
             form1 = do var <- parseVar
                        return (VarTerm var)
@@ -107,7 +112,7 @@ parseAtomicFormula = do skipSpaces
                                        <|> parseEmptyPredicate
                         skipSpaces
                         return parseResult
-        <?> "formula"
+        <?> "atomic formula"
         where
             parseEmptyPredicate = do
                 name <- predicateName

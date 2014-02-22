@@ -58,8 +58,8 @@ instance Show Term where
     show (VarTerm var) = show var
     show (FunctionalTerm "0" []) = "0"
     show (FunctionalTerm "'" (a:[])) = (show a) ++ "'"
-    show (FunctionalTerm "*" (a:b:[])) = (show a) ++ " * " ++ (show b)
-    show (FunctionalTerm "+" (a:b:[])) = (show a) ++ " + " ++ (show b)
+    show (FunctionalTerm "*" (a:b:[])) = "(" ++ (show a) ++ " * " ++ (show b) ++ ")"
+    show (FunctionalTerm "+" (a:b:[])) = "(" ++ (show a) ++ " + " ++ (show b) ++ ")"
     show (FunctionalTerm name subterms) = print_subterms name subterms
 instance Show Formula where
     show (Predicate "=" (a:b:[])) = (show a) ++ " = " ++ (show b)

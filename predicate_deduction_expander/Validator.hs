@@ -28,9 +28,9 @@ data ValidateState = ValidateState { mpCands :: MPCandidatesMap,
     deriving Show
 pairSwap (a,b) = (b,a)
 extractProof = impl
-    where extractImpl taus dsFormulaP = map snd $ sort $ map pairSwap $ bfsProofTree taus [dsFormulaP] []
-          bfsProofTree _ [] res = res
-          bfsProofTree taus ((f,(n, src)):q) res = let res' = ((f, n):res)
+    where extractImpl taus dsFormulaP = map snd $ sort $ map pairSwap $ {-filter ((>=0).fst.snd) $ M.toList $ taus-} bfsProofTree taus [dsFormulaP] S.empty
+          bfsProofTree _ [] res = S.toList res
+          bfsProofTree taus ((f,(n, src)):q) res = let res' = S.insert (f, n) res
                                                        throwError :: Formula -> a
                                                        throwError f = error $ "bfsProofTree: formula " ++ (show f) ++ " not found in tautologies"
                                                        tau :: Formula -> (Formula, (Int, FormulaSource))
