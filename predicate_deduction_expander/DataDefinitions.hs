@@ -94,4 +94,6 @@ data Error = UndefinedError | ParseError String
              | ValidateError Int [Warning]
              | DSValidateError [Warning]
 
-
+lineProof (Proof ds fs) = LinedProof ds $ reverse $ loop fs [] 1
+            where loop [] res _ = res
+                  loop (f:fs) res n = loop fs ((n,f):res) $ n + 1

@@ -1,8 +1,10 @@
 module DeductionExpander(expandDeduction, tryExpandDeduction) where
+import ErrorShowInstancesRussian
 import DataDefinitions
 import Data.List
 import FormulaReplace
 import AxiomSchemes
+import Validator(validateProof)
 import qualified Data.Map as M
 import qualified Data.Set as S
 import "mtl" Control.Monad.State
@@ -72,11 +74,15 @@ expandDeduction (Proof (DeductionStatement [] _) _) = Nothing
 expandDeduction proof = let (_, state) = runState (addAllFormulas $ fList proof) $ createState proof
                         in Just $ composeResult state
 
-tryExpandDeduction proof expandLevel = if expandLevel >0
-                                       then tryExpandDeduction (case expandDeduction proof of
-                                            Nothing -> proof
-                                            Just proof' -> proof') $ expandLevel - 1
-                                       else proof
+tryExpandDeduction proof expandLevel = validateShortenProof $ impl proof expandLevel
+            where impl proof expandLevel = if expandLevel >0
+                                           then tryExpandDeduction (case expandDeduction proof of
+                                                Nothing -> proof
+                                                Just proof' -> proof') $ expandLevel - 1
+                                           else proof
+                  validateShortenProof proof = case validateProof (lineProof proof) 0 of
+                                           Left err -> error $ "expanded proof is invalid, error: " ++ (show err)
+                                           Right proof' -> proof'
 
 addAllFormulas [] = return ()
 addAllFormulas (f:fs) = do addFormulaProof f
